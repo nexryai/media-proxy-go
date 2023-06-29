@@ -15,7 +15,7 @@ import (
 
 func fetchImage(url string) (image.Image, error) {
 	core.MsgDebug(fmt.Sprintf("Donwload image: %s", url))
-	
+
 	resp, err := http.Get(url)
 	if err != nil {
 		return nil, fmt.Errorf("failed to fetch image: %v", err)
