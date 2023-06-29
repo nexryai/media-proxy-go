@@ -10,6 +10,7 @@ import (
 	"github.com/srwiley/oksvg"
 	"github.com/srwiley/rasterx"
 	"image"
+	"image/gif"
 	_ "image/gif"
 	_ "image/jpeg"
 	_ "image/png"
@@ -38,6 +39,7 @@ func convertSvgToWebp(resp *http.Response) []byte {
 
 }
 
+// 静止画像を取得する関数（アニメーション画像を指定しても静止画が返ってくる）
 func fetchImage(url string) (image.Image, string, error) {
 	core.MsgDebug(fmt.Sprintf("Donwload image: %s", url))
 
@@ -68,20 +70,58 @@ func fetchImage(url string) (image.Image, string, error) {
 	// ToDo: もっとマシな書き方あるだろうけどsvgってそんな使うもん？
 	if contentType == "image/svg+xml" {
 		body = convertSvgToWebp(resp)
+		imgDecoded, _, err := image.Decode(bytes.NewReader(body))
+		if err != nil {
+			return nil, contentType, fmt.Errorf("failed to decode image: %v", err)
+		}
+		img = imgDecoded
+
 	} else if contentType == "image/webp" {
 		imgDecoded, err := webp.Decode(bytes.NewReader(body), &decoder.Options{})
 		if err != nil {
 			return nil, contentType, fmt.Errorf("failed to decode webp: %v", err)
 		}
 		img = imgDecoded
+
 	} else {
 		imgDecoded, _, err := image.Decode(bytes.NewReader(body))
 		if err != nil {
 			return nil, contentType, fmt.Errorf("failed to decode image: %v", err)
 		}
 		img = imgDecoded
+
 	}
 	return img, contentType, nil
+}
+
+// gif画像を取得する関数
+func fetchGifImage(url string) (*gif.GIF, error) {
+	core.MsgDebug(fmt.Sprintf("Donwload animated image: %s", url))
+
+	resp, err := http.Get(url)
+	if err != nil {
+		return nil, fmt.Errorf("failed to fetch image: %v", err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		core.MsgWarn("Failed to download animated image. URL: " + url + ", Status: " + resp.Status)
+		return nil, fmt.Errorf("failed to fetch animated image: error status code %d", resp.StatusCode)
+	} else {
+		core.MsgDebug("request ok.")
+	}
+
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return nil, err
+	}
+
+	gifImage, err := gif.DecodeAll(bytes.NewReader(body))
+	if err != nil {
+		return nil, fmt.Errorf("failed to decode gif image: %v", err)
+	}
+	return gifImage, nil
+
 }
 
 func saveResponseToFile(resp *http.Response, filename string) error {
