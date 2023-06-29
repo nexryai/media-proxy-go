@@ -26,16 +26,20 @@ func resizeImage(img image.Image, width, height int) image.Image {
 	return resizedImg
 }
 
-func ProcessImage(url string, heightLimit int) []byte {
-	img, err := fetchImage(url)
+func ProxyImage(url string, widthLimit int, heightLimit int, isStatic bool) []byte {
+	img, contentType, err := fetchImage(url)
 	if err != nil {
 		core.MsgErrWithDetail(err, "Faild to download image")
 		return nil
 	}
 
-	// heightLimitより小さい画像であるなら変換する必要はないため処理を飛ばす
-	if img.Bounds().Dy() > heightLimit {
-		resizedImg := resizeImage(img, 0, heightLimit)
+	if contentType == "image/gif" {
+		// ToDo
+	}
+
+	// widthLimitかheightLimitを超えている場合のみ処理する
+	if img.Bounds().Dx() > widthLimit || img.Bounds().Dy() > heightLimit {
+		resizedImg := resizeImage(img, widthLimit, heightLimit)
 		img = resizedImg
 	}
 

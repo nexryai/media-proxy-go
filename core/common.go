@@ -13,9 +13,8 @@ var green = "\033[32m"
 var yellow = "\033[33m"
 var gray = "\033[37m"
 
-// 現状だとデバッグモードはロギングにのみ影響するので公開していないが将来的にIsDebugModeになる可能性もある？
 func IsDebugMode() bool {
-	//return os.Getenv("LANCE_DEBUG_MODE") == "true"
+	//return os.Getenv("DEBUG_MODE") == "true"
 	return true
 }
 
