@@ -14,6 +14,7 @@ func resizeImage(img image.Image, width, height int) image.Image {
 	imgWidth := bounds.Dx()
 	imgHeight := bounds.Dy()
 
+	// 縦横どちらかが0ならアスペクト比を保つよう適切な値を設定する
 	if width == 0 {
 		width = imgWidth * height / imgHeight
 	} else if height == 0 {
@@ -32,6 +33,7 @@ func ProcessImage(url string, heightLimit int) []byte {
 		return nil
 	}
 
+	// heightLimitより小さい画像であるなら変換する必要はないため処理を飛ばす
 	if img.Bounds().Dy() > heightLimit {
 		resizedImg := resizeImage(img, 0, heightLimit)
 		img = resizedImg
@@ -39,6 +41,7 @@ func ProcessImage(url string, heightLimit int) []byte {
 
 	var buf bytes.Buffer
 
+	// TODO: エンコードオプション変えられるようにする
 	options, err := encoder.NewLossyEncoderOptions(encoder.PresetDefault, 75)
 	if err != nil {
 		return nil

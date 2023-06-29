@@ -31,7 +31,7 @@ func fetchImage(url string) (image.Image, error) {
 
 	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		fmt.Println("Error:", err)
+		return nil, err
 	}
 
 	img, _, err := image.Decode(bytes.NewReader(body))

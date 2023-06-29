@@ -3,6 +3,7 @@ package server
 import (
 	"encoding/json"
 	"git.sda1.net/media-proxy-go/media"
+	"git.sda1.net/media-proxy-go/security"
 	"github.com/valyala/fasthttp"
 	"strings"
 )
@@ -26,12 +27,20 @@ func RequestHandler(ctx *fasthttp.RequestCtx) {
 
 			if url == "" {
 				ctx.Error("Bad request", fasthttp.StatusBadRequest)
+				return
+			}
+
+			// ポートが指定されている、ホスト名がプライベートアドレスを示している場合はブロック
+			if !security.IsSafeUrl(url) {
+				ctx.Error("Access denied", fasthttp.StatusForbidden)
+				return
 			}
 
 			convertedImage := media.ProcessImage(url, 320)
 
 			if convertedImage == nil {
 				ctx.Error("Internal server error", fasthttp.StatusInternalServerError)
+				return
 			}
 
 			ctx.Response.Header.SetContentType("image/webp")
