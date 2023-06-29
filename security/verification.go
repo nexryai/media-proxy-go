@@ -27,11 +27,12 @@ func IsSafeUrl(requestedUrl string) bool {
 	// ポート番号を取得
 	port := parsedURL.Port()
 
-	if port != "" {
-		// ポートが指定されているならブロック
+	if port != "" && port != "80" && port != "443" {
+		// 宛先が80と443以外ならブロック
 		return false
 	}
 
+	// hostname検証
 	hostname := parsedURL.Hostname()
 
 	ip := net.ParseIP(hostname)
