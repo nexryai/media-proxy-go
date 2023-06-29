@@ -2,7 +2,7 @@ package media
 
 import (
 	"bytes"
-	"fmt"
+	"git.sda1.net/media-proxy-go/core"
 	"github.com/kolesa-team/go-webp/decoder"
 	"github.com/kolesa-team/go-webp/encoder"
 	"github.com/kolesa-team/go-webp/webp"
@@ -40,20 +40,22 @@ func convertSvgToWebp(resp *http.Response) []byte {
 }
 
 // 画像をデコードし、image.Image型で返す
-func decodeStaticImage(bodyReader io.Reader, contentType string) (image.Image, error) {
+func decodeStaticImage(imageBuffer io.Reader, contentType string) (image.Image, error) {
 	var img image.Image
 	var errDecode error
 
 	// 適切なデコーダーを使用して画像をデコード
 	switch contentType {
 	case "image/webp":
-		img, errDecode = webp.Decode(bodyReader, &decoder.Options{})
+		core.MsgDebug("Decode as webp")
+		img, errDecode = webp.Decode(imageBuffer, &decoder.Options{})
 	default:
-		img, _, errDecode = image.Decode(bodyReader)
+		core.MsgDebug("Decode as png/jpeg")
+		img, _, errDecode = image.Decode(imageBuffer)
 	}
 
 	if errDecode != nil {
-		return nil, fmt.Errorf("failed to decode image: %v", errDecode)
+		return nil, errDecode
 	}
 
 	return img, nil
@@ -64,7 +66,7 @@ func encodeAnimatedGifImage(bodyReader io.Reader, contentType string) ([]byte, e
 
 	gifImage, err := gif.DecodeAll(bodyReader)
 	if err != nil {
-		return nil, fmt.Errorf("failed to decode gif image: %v", err)
+		return nil, err
 	}
 	var buf bytes.Buffer
 

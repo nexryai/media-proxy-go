@@ -7,28 +7,64 @@ import (
 	"github.com/kolesa-team/go-webp/encoder"
 	"github.com/kolesa-team/go-webp/webp"
 	"image"
+	"io"
+	"io/ioutil"
 )
 
 func ProxyImage(url string, widthLimit int, heightLimit int, isStatic bool) []byte {
 
 	var img image.Image
 
-	fetchedImage, contentType, err := fetchImage(url)
+	imageBuffer, contentType, err := fetchImage(url)
 	if err != nil {
 		core.MsgErrWithDetail(err, "Failed to download image")
 		return nil
 	}
 
+	// 何回も参照できるようにコピー
+	fetchedImage, err := ioutil.ReadAll(imageBuffer)
+	imageBuffer.Reset()
+
+	imgDebug, errDebug := decodeStaticImage(bytes.NewReader(fetchedImage), contentType)
+	if err != nil {
+		fmt.Println("Error:", errDebug)
+	} else {
+		fmt.Println(imgDebug.Bounds())
+	}
+
+	imgDebug, errDebug = decodeStaticImage(bytes.NewReader(fetchedImage), contentType)
+	if err != nil {
+		fmt.Println("Error:", errDebug)
+	} else {
+		fmt.Println(imgDebug.Bounds())
+	}
+
+	core.MsgDebug("Content-Type: " + contentType)
+
 	if contentType == "image/gif" {
-		imgBuffer, err := encodeAnimatedGifImage(fetchedImage, contentType)
+		imgBytes, err := encodeAnimatedGifImage(bytes.NewReader(fetchedImage), contentType)
+
 		if err != nil {
 			core.MsgWarn(fmt.Sprintf("Failed to convert gif to webp: %v", err))
 			return nil
 		} else {
-			return imgBuffer
+			return imgBytes
 		}
+	} else if isAnimatedPNG(bytes.NewReader(fetchedImage)) && !isStatic {
+		// apngかつstatic出ない場合、apngをそのまま返す
+		imgBytes, err := ioutil.ReadAll(bytes.NewReader(fetchedImage))
+
+		if err != nil {
+			core.MsgWarn(fmt.Sprintf("Failed to proxy apng: %v", err))
+			return nil
+		} else {
+			return imgBytes
+		}
+
 	} else {
-		img, err = decodeStaticImage(fetchedImage, contentType)
+		img, err = decodeStaticImage(bytes.NewReader(fetchedImage), contentType)
+		imageBuffer.Reset()
+
 		if err != nil {
 			core.MsgWarn(fmt.Sprintf("Failed to decode image: %v", err))
 			return nil
@@ -61,4 +97,18 @@ func ProxyImage(url string, widthLimit int, heightLimit int, isStatic bool) []by
 	copy(encodedImg, buf.Bytes())
 
 	return encodedImg
+}
+
+func decodeImageDebug(bodyReader io.Reader) (image.Image, error) {
+	body, err := ioutil.ReadAll(bodyReader)
+	if err != nil {
+		return nil, err
+	}
+
+	img, _, err := image.Decode(bytes.NewReader(body))
+	if err != nil {
+		return nil, err
+	}
+
+	return img, nil
 }

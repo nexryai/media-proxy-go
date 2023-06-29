@@ -14,7 +14,7 @@ import (
 )
 
 // URLを取得して、リーダーを返す
-func fetchImage(url string) (io.ReadCloser, string, error) {
+func fetchImage(url string) (*bytes.Buffer, string, error) {
 	core.MsgDebug(fmt.Sprintf("Download image: %s", url))
 
 	resp, err := http.Get(url)
@@ -23,6 +23,7 @@ func fetchImage(url string) (io.ReadCloser, string, error) {
 	}
 
 	contentType := resp.Header.Get("Content-Type")
+	body, _ := ioutil.ReadAll(resp.Body)
 
 	if resp.StatusCode != http.StatusOK {
 		core.MsgWarn("Failed to download image. URL: " + url + ", Status: " + resp.Status)
@@ -32,20 +33,20 @@ func fetchImage(url string) (io.ReadCloser, string, error) {
 		core.MsgDebug("Request OK.")
 	}
 
-	var bodyReader io.ReadCloser = resp.Body
+	//var bodyReader io.ReadCloser = resp.Body
 
 	// SVGなら一旦webpにする
 	if contentType == "image/svg+xml" {
-		body := convertSvgToWebp(resp)
+		body = convertSvgToWebp(resp)
 		resp.Body.Close() // 元のレスポンスを閉じる
 		if err != nil {
 			return nil, contentType, fmt.Errorf("failed to convert SVG to WebP: %v", err)
 		}
-
-		bodyReader = ioutil.NopCloser(bytes.NewReader(body))
 	}
 
-	return bodyReader, contentType, nil
+	imageBuffer := bytes.NewBuffer(body)
+
+	return imageBuffer, contentType, nil
 }
 
 func saveResponseToFile(resp *http.Response, filename string) error {
