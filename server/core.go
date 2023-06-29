@@ -24,6 +24,11 @@ func RequestHandler(ctx *fasthttp.RequestCtx) {
 		if strings.HasSuffix(string(ctx.Path()), ".webp") {
 			queryArgs := ctx.QueryArgs()
 			url := string(queryArgs.Peek("url"))
+			isAvatar := string(queryArgs.Peek("avatar")) == "1"
+			isEmoji := string(queryArgs.Peek("emoji")) == "1"
+			isStatic := string(queryArgs.Peek("static")) == "1"
+			isPreview := string(queryArgs.Peek("preview")) == "1"
+			isBadge := string(queryArgs.Peek("badge")) == "1"
 
 			if url == "" {
 				ctx.Error("Bad request", fasthttp.StatusBadRequest)
@@ -36,15 +41,31 @@ func RequestHandler(ctx *fasthttp.RequestCtx) {
 				return
 			}
 
-			convertedImage := media.ProcessImage(url, 320)
+			var proxiedImage []byte
 
-			if convertedImage == nil {
+			if isAvatar {
+				// アバター用
+				proxiedImage = media.ProxyImage(url, 0, 320, isStatic)
+			} else if isEmoji {
+				// 絵文字用
+				proxiedImage = media.ProxyImage(url, 0, 128, isStatic)
+			} else if isPreview {
+				proxiedImage = media.ProxyImage(url, 200, 200, isStatic)
+			} else if isBadge {
+				proxiedImage = media.ProxyImage(url, 96, 96, true)
+			} else {
+				// TODO: Misskeyの仕様的にはsvgでない場合、無変換でプロキシするのが望ましいらしい (ref: https://github.com/misskey-dev/media-proxy/blob/master/SPECIFICATION.md#%E5%A4%89%E6%8F%9B%E3%82%AF%E3%82%A8%E3%83%AA%E3%81%8C%E5%AD%98%E5%9C%A8%E3%81%97%E3%81%AA%E3%81%84%E5%A0%B4%E5%90%88%E3%81%AE%E6%8C%99%E5%8B%95)
+				// ただしこれがないと爆弾画像とか送りつけられるしトランスコードした方がセキュリティ的にも安心な気がする
+				proxiedImage = media.ProxyImage(url, 3200, 3200, isStatic)
+			}
+
+			if proxiedImage == nil {
 				ctx.Error("Internal server error", fasthttp.StatusInternalServerError)
 				return
 			}
 
 			ctx.Response.Header.SetContentType("image/webp")
-			ctx.Response.SetBody(convertedImage)
+			ctx.Response.SetBody(proxiedImage)
 		} else {
 			ctx.Error("Not found", fasthttp.StatusNotFound)
 		}
