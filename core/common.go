@@ -14,8 +14,9 @@ var yellow = "\033[33m"
 var gray = "\033[37m"
 
 // 現状だとデバッグモードはロギングにのみ影響するので公開していないが将来的にIsDebugModeになる可能性もある？
-func isDebugMode() bool {
-	return os.Getenv("LANCE_DEBUG_MODE") == "true"
+func IsDebugMode() bool {
+	//return os.Getenv("LANCE_DEBUG_MODE") == "true"
+	return true
 }
 
 func MsgInfo(text string) {
@@ -31,7 +32,7 @@ func MsgWarn(text string) {
 }
 
 func MsgDebug(text string) {
-	if isDebugMode() {
+	if IsDebugMode() {
 		fmt.Println(gray + "⚙ DEBUG: " + text + reset)
 	}
 }
@@ -49,6 +50,14 @@ func ExitOnError(err error, message string) {
 	}
 
 	return
+}
+
+func MsgErrWithDetail(err error, message string) {
+	if err != nil {
+		errorInfo := fmt.Sprintf("Fatal error: %s", message)
+		MsgErr(errorInfo)
+		MsgDetail(fmt.Sprintf("%v", err))
+	}
 }
 
 func GetUnixTimestampString() string {
