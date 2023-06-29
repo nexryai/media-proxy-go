@@ -2,6 +2,8 @@ package server
 
 import (
 	"encoding/json"
+	"fmt"
+	"git.sda1.net/media-proxy-go/core"
 	"git.sda1.net/media-proxy-go/media"
 	"git.sda1.net/media-proxy-go/security"
 	"github.com/valyala/fasthttp"
@@ -9,7 +11,11 @@ import (
 )
 
 func RequestHandler(ctx *fasthttp.RequestCtx) {
-	switch string(ctx.Path()) {
+	path := string(ctx.Path())
+
+	core.MsgInfo(fmt.Sprintf("Handled request: %s", path))
+
+	switch path {
 	case "/":
 		status := Status{Status: "OK"}
 		jsonData, err := json.Marshal(status)

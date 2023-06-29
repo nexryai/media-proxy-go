@@ -1,6 +1,7 @@
 package media
 
 import (
+	"bufio"
 	"bytes"
 	"fmt"
 	"git.sda1.net/media-proxy-go/core"
@@ -41,7 +42,7 @@ func convertSvgToWebp(resp *http.Response) []byte {
 
 // 静止画像を取得する関数（アニメーション画像を指定しても静止画が返ってくる）
 func fetchImage(url string) (image.Image, string, error) {
-	core.MsgDebug(fmt.Sprintf("Donwload image: %s", url))
+	core.MsgDebug(fmt.Sprintf("Download image: %s", url))
 
 	resp, err := http.Get(url)
 	if err != nil {
@@ -55,42 +56,39 @@ func fetchImage(url string) (image.Image, string, error) {
 		core.MsgWarn("Failed to download image. URL: " + url + ", Status: " + resp.Status)
 		return nil, contentType, fmt.Errorf("failed to fetch image: error status code %d", resp.StatusCode)
 	} else {
-		core.MsgDebug("request ok.")
+		core.MsgDebug("Request OK.")
 	}
 
-	body, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		return nil, contentType, err
+	var bodyReader io.Reader = resp.Body
+
+	// バッファリングを行う
+	bodyReader = bufio.NewReader(bodyReader)
+
+	// SVGなら一旦webpにする
+	if contentType == "image/svg+xml" {
+		body := convertSvgToWebp(resp)
+		if err != nil {
+			return nil, contentType, fmt.Errorf("failed to convert SVG to WebP: %v", err)
+		}
+
+		bodyReader = bytes.NewReader(body)
 	}
 
 	var img image.Image
-	core.MsgDebug(contentType)
+	var errDecode error
 
-	// SVGなら一旦webpにする
-	// ToDo: もっとマシな書き方あるだろうけどsvgってそんな使うもん？
-	if contentType == "image/svg+xml" {
-		body = convertSvgToWebp(resp)
-		imgDecoded, _, err := image.Decode(bytes.NewReader(body))
-		if err != nil {
-			return nil, contentType, fmt.Errorf("failed to decode image: %v", err)
-		}
-		img = imgDecoded
-
-	} else if contentType == "image/webp" {
-		imgDecoded, err := webp.Decode(bytes.NewReader(body), &decoder.Options{})
-		if err != nil {
-			return nil, contentType, fmt.Errorf("failed to decode webp: %v", err)
-		}
-		img = imgDecoded
-
-	} else {
-		imgDecoded, _, err := image.Decode(bytes.NewReader(body))
-		if err != nil {
-			return nil, contentType, fmt.Errorf("failed to decode image: %v", err)
-		}
-		img = imgDecoded
-
+	// 適切なデコーダーを使用して画像をデコード
+	switch contentType {
+	case "image/webp":
+		img, errDecode = webp.Decode(bodyReader, &decoder.Options{})
+	default:
+		img, _, errDecode = image.Decode(bodyReader)
 	}
+
+	if errDecode != nil {
+		return nil, contentType, fmt.Errorf("failed to decode image: %v", errDecode)
+	}
+
 	return img, contentType, nil
 }
 

@@ -101,5 +101,9 @@ func ProxyImage(url string, widthLimit int, heightLimit int, isStatic bool) []by
 		return nil
 	}
 
-	return buf.Bytes()
+	// buf.Bytes()を直接返すとメモリリークの原因になる
+	encodedImg := make([]byte, buf.Len())
+	copy(encodedImg, buf.Bytes())
+
+	return encodedImg
 }
