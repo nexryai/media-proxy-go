@@ -1,10 +1,10 @@
-FROM golang:1.20-alpine as builder
+FROM golang:1.20 as builder
 WORKDIR /app
 
 COPY . ./
 
-RUN apk add libwebp-dev \
-    && go build -o mediaproxy main.go
+RUN apt update && apt -y install libwebp-dev \
+ && go build -o mediaproxy main.go
 
 FROM alpine:latest
 
