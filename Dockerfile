@@ -3,8 +3,7 @@ WORKDIR /app
 
 COPY . ./
 
-RUN apt update \
-    && apk add libwebp-dev \
+RUN apk add libwebp-dev \
     && go build -o mediaproxy main.go
 
 FROM alpine:latest
