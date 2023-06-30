@@ -19,7 +19,7 @@ type limitedReader struct {
 }
 
 // URLを取得して、リーダーを返す
-func fetchImage(url string) (*bytes.Buffer, string, error) {
+func fetchImage(url string) (io.Reader, string, error) {
 	core.MsgDebug(fmt.Sprintf("Download image: %s", url))
 
 	// 現状では30MBに制限しているが変えられるようにするべきかも
@@ -34,6 +34,8 @@ func fetchImage(url string) (*bytes.Buffer, string, error) {
 	//contentType := resp.Header.Get("Content-Type")
 
 	body, _ := ioutil.ReadAll(resp.Body)
+	resp.Body.Close()
+
 	contentType := http.DetectContentType(body)
 
 	// SVGが平文扱いになるのをなんとかする
@@ -45,17 +47,15 @@ func fetchImage(url string) (*bytes.Buffer, string, error) {
 
 	if resp.StatusCode != http.StatusOK {
 		core.MsgWarn("Failed to download image. URL: " + url + ", Status: " + resp.Status)
-		resp.Body.Close()
 		return nil, contentType, fmt.Errorf("failed to fetch image: error status code %d", resp.StatusCode)
 	} else {
 		core.MsgDebug("Request OK.")
 	}
 
-	//var bodyReader io.ReadCloser = resp.Body
+	// bodyをbytes.Readerに変換して返す
+	imageReader := bytes.NewReader(body)
 
-	imageBuffer := bytes.NewBuffer(body)
-
-	return imageBuffer, contentType, nil
+	return imageReader, contentType, nil
 }
 
 func downloadFile(url string, maxSize int64) (*http.Response, error) {
@@ -71,7 +71,6 @@ func downloadFile(url string, maxSize int64) (*http.Response, error) {
 			return nil, err
 		}
 		if length > maxSize {
-			resp.Body.Close()
 			return nil, fmt.Errorf("file size exceeds the limit")
 		}
 	}

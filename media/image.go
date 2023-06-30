@@ -14,7 +14,7 @@ import (
 )
 
 // 画像をデコードし、image.Image型で返す
-func decodeStaticImage(imageBuffer io.Reader, contentType string) (image.Image, error) {
+func decodeStaticImage(imageReader io.Reader, contentType string) (image.Image, error) {
 	var img image.Image
 	var errDecode error
 
@@ -22,10 +22,10 @@ func decodeStaticImage(imageBuffer io.Reader, contentType string) (image.Image, 
 	switch contentType {
 	case "image/webp":
 		core.MsgDebug("Decode as webp")
-		img, errDecode = webp.Decode(imageBuffer, &decoder.Options{})
+		img, errDecode = webp.Decode(imageReader, &decoder.Options{})
 	default:
 		core.MsgDebug("Decode as png/jpeg/heif")
-		img, _, errDecode = image.Decode(imageBuffer)
+		img, _, errDecode = image.Decode(imageReader)
 	}
 
 	if errDecode != nil {
