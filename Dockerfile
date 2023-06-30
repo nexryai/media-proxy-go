@@ -3,7 +3,7 @@ WORKDIR /build
 
 COPY . ./
 
-RUN apt update && apt -y install libwebp-dev \
+RUN apt update && apt -y install libwebp-dev libheif-dev \
  && go build -o mediaproxy main.go
 
 FROM debian:bookworm-slim
