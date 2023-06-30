@@ -5,9 +5,6 @@ go 1.20
 require (
 	github.com/kolesa-team/go-webp v1.0.4
 	github.com/pkg/profile v1.7.0
-	github.com/sizeofint/webpanimation v0.0.0-20210809145948-1d2b32119882
-	github.com/srwiley/oksvg v0.0.0-20221011165216-be6e8873101c
-	github.com/srwiley/rasterx v0.0.0-20220730225603-2ab79fcdd4ef
 	github.com/valyala/fasthttp v1.48.0
 	golang.org/x/image v0.8.0
 )

@@ -54,17 +54,7 @@ func ProxyImage(url string, widthLimit int, heightLimit int, isStatic bool) []by
 
 	core.MsgDebug("Content-Type: " + contentType)
 
-	if contentType == "image/gif" {
-		imgBytes, err := encodeAnimatedGifImage(bytes.NewReader(fetchedImage), contentType)
-
-		if err != nil {
-			core.MsgWarn(fmt.Sprintf("Failed to convert gif to webp: %v", err))
-			return nil
-		} else {
-			return imgBytes
-		}
-
-	} else if contentType == "image/svg+xml" {
+	if contentType == "image/svg+xml" {
 		// TODO: SVG対応
 		return nil
 

@@ -1,20 +1,16 @@
 package media
 
 import (
-	"bytes"
 	"git.sda1.net/media-proxy-go/core"
 	"github.com/kolesa-team/go-webp/decoder"
 	"github.com/kolesa-team/go-webp/webp"
-	"github.com/sizeofint/webpanimation"
 	// ref: https://github.com/strukturag/libheif/issues/824
 	// _ "github.com/strukturag/libheif/go/heif"
 	"image"
-	"image/gif"
 	_ "image/gif"
 	_ "image/jpeg"
 	_ "image/png"
 	"io"
-	"log"
 )
 
 // 画像をデコードし、image.Image型で返す
@@ -37,44 +33,4 @@ func decodeStaticImage(imageBuffer io.Reader, contentType string) (image.Image, 
 	}
 
 	return img, nil
-}
-
-// gif画像をAnimated webpにエンコードする
-func encodeAnimatedGifImage(bodyReader io.Reader, contentType string) ([]byte, error) {
-
-	gifImage, err := gif.DecodeAll(bodyReader)
-	if err != nil {
-		return nil, err
-	}
-	var buf bytes.Buffer
-
-	webpanim := webpanimation.NewWebpAnimation(gifImage.Config.Width, gifImage.Config.Height, gifImage.LoopCount)
-	//webpanim.WebPAnimEncoderOptions.SetKmin(9999)
-	//webpanim.WebPAnimEncoderOptions.SetKmax(9999)
-	defer webpanim.ReleaseMemory() // これないとメモリリークする
-	webpConfig := webpanimation.NewWebpConfig()
-	webpConfig.SetLossless(1)
-
-	timeline := 0
-
-	for i, img := range gifImage.Image {
-		err = webpanim.AddFrame(img, timeline, webpConfig)
-		if err != nil {
-			log.Fatal(err)
-		}
-		timeline += gifImage.Delay[i] * 10
-	}
-
-	err = webpanim.AddFrame(nil, timeline, webpConfig)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	err = webpanim.Encode(&buf) // encode animation and write result bytes in buffer
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	return buf.Bytes(), nil
-
 }
