@@ -4,6 +4,7 @@ import (
 	"git.sda1.net/media-proxy-go/core"
 	"net"
 	"net/url"
+	"strings"
 )
 
 func isPrivateAddress(address string) bool {
@@ -21,6 +22,11 @@ func IsSafeUrl(requestedUrl string) bool {
 	parsedURL, err := url.Parse(requestedUrl)
 	if err != nil {
 		core.MsgErr("Failed to parse URL")
+		return false
+	}
+
+	// Unixソケットを拒否
+	if strings.HasPrefix(parsedURL.Scheme, "unix") {
 		return false
 	}
 

@@ -38,7 +38,7 @@ func ProxyImage(url string, widthLimit int, heightLimit int, isStatic bool) []by
 		return nil
 	}
 
-	// 何回も参照できるようにコピー
+	// FIXME: これがメモリリークの原因な気がするけどimageBufferは一度参照すると二度目以降参照できなくなる
 	fetchedImage, err := ioutil.ReadAll(imageBuffer)
 	imageBuffer.Reset()
 

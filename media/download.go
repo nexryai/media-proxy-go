@@ -30,8 +30,13 @@ func fetchImage(url string) (*bytes.Buffer, string, error) {
 		return nil, "", fmt.Errorf("failed to fetch image: %v", err)
 	}
 
-	contentType := resp.Header.Get("Content-Type")
+	// これだと偽装できる
+	//contentType := resp.Header.Get("Content-Type")
+
 	body, _ := ioutil.ReadAll(resp.Body)
+
+	contentType := http.DetectContentType(body)
+	core.MsgDebug("Detected MIME: " + contentType)
 
 	if resp.StatusCode != http.StatusOK {
 		core.MsgWarn("Failed to download image. URL: " + url + ", Status: " + resp.Status)

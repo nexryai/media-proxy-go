@@ -59,7 +59,6 @@ func RequestHandler(ctx *fasthttp.RequestCtx) {
 			proxiedImage = media.ProxyImage(url, 96, 96, true)
 		} else {
 			// TODO: Misskeyの仕様的にはsvgでない場合、無変換でプロキシするのが望ましいらしい (ref: https://github.com/misskey-dev/media-proxy/blob/master/SPECIFICATION.md#%E5%A4%89%E6%8F%9B%E3%82%AF%E3%82%A8%E3%83%AA%E3%81%8C%E5%AD%98%E5%9C%A8%E3%81%97%E3%81%AA%E3%81%84%E5%A0%B4%E5%90%88%E3%81%AE%E6%8C%99%E5%8B%95)
-			// ただしこれがないと爆弾画像とか送りつけられるしトランスコードした方がセキュリティ的にも安心な気がする
 			proxiedImage = media.ProxyImage(url, 3200, 3200, isStatic)
 		}
 
