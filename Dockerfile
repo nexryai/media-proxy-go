@@ -15,7 +15,7 @@ RUN apk add tini libwebp --no-cache \
  && adduser -D -h /app -s /bin/sh -u 1000 -G app app \
  && chown -R app:app /app \
  && chmod +x /app/mediaproxy \
- && chmod -R 777 /app \
+ && chmod -R 777 /app
 
 
 USER app
