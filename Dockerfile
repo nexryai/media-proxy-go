@@ -10,7 +10,8 @@ FROM debian:bullseye-slim
 
 COPY --from=builder /build/mediaproxy /app/mediaproxy
 
-RUN apt install -y tini libwebp6 \
+RUN apt update \
+ && apt install -y tini libwebp6 \
  && groupadd -g "991" misskey \
  && useradd -l -u "991" -g "991" -m -d /app app \
  && chown -R app:app /app \
