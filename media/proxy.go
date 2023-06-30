@@ -8,7 +8,6 @@ import (
 	"github.com/kolesa-team/go-webp/encoder"
 	"github.com/kolesa-team/go-webp/webp"
 	"image"
-	"io"
 	"io/ioutil"
 )
 
@@ -27,11 +26,11 @@ func isStaticFormat(contentType string) bool {
 	}
 }
 
-func isStaticImage(contentType string, bodyReader io.Reader) bool {
-	if contentType == "image/png" && !isAnimatedPNG(bodyReader) {
+func isStaticImage(contentType string, fetchedImage *[]byte) bool {
+	if contentType == "image/png" && !isAnimatedPNG(fetchedImage) {
 		return true
 	}
-	if contentType == "image/webp" && !isAnimatedWebP(bodyReader) {
+	if contentType == "image/webp" && !isAnimatedWebP(fetchedImage) {
 		return true
 	}
 	core.MsgDebug("Animated")
@@ -58,11 +57,10 @@ func ProxyImage(url string, widthLimit int, heightLimit int, isStatic bool) []by
 		// TODO: SVG対応
 		return nil
 
-	} else if isStaticFormat(contentType) || isStaticImage(contentType, bytes.NewReader(fetchedImage)) || isStatic {
+	} else if isStaticFormat(contentType) || isStaticImage(contentType, &fetchedImage) || isStatic {
 
 		// 完全に静止画像のフォーマット or apngでない or static指定 ならdecodeStaticImageでデコードする
 		img, err = decodeStaticImage(bytes.NewReader(fetchedImage), contentType)
-		imageBuffer.Reset()
 
 		if err != nil {
 			core.MsgWarn(fmt.Sprintf("Failed to decode image: %v", err))
