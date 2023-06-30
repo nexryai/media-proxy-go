@@ -8,7 +8,6 @@ import (
 	"github.com/kolesa-team/go-webp/encoder"
 	"github.com/kolesa-team/go-webp/webp"
 	"image"
-	"io/ioutil"
 )
 
 func isStaticFormat(contentType string) bool {
@@ -41,14 +40,14 @@ func ProxyImage(url string, widthLimit int, heightLimit int, isStatic bool) []by
 
 	var img image.Image
 
-	imageReader, contentType, err := fetchImage(url)
+	imageBufferPtr, contentType, err := fetchImage(url)
 	if err != nil {
 		core.MsgErrWithDetail(err, "Failed to download image")
 		return nil
 	}
 
-	// FIXME: これがメモリリークの原因な気がするけどimageBufferは一度参照すると二度目以降参照できなくなる
-	fetchedImage, err := ioutil.ReadAll(imageReader)
+	// FIXME: これがメモリリークの原因な気がするけどimageReaderは一度参照すると二度目以降参照できなくなる
+	fetchedImage := *imageBufferPtr
 
 	core.MsgDebug("Content-Type: " + contentType)
 

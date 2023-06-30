@@ -1,7 +1,6 @@
 package media
 
 import (
-	"bytes"
 	"fmt"
 	"git.sda1.net/media-proxy-go/core"
 	_ "image/gif"
@@ -19,7 +18,7 @@ type limitedReader struct {
 }
 
 // URLを取得して、リーダーを返す
-func fetchImage(url string) (io.Reader, string, error) {
+func fetchImage(url string) (*[]byte, string, error) {
 	core.MsgDebug(fmt.Sprintf("Download image: %s", url))
 
 	// 現状では30MBに制限しているが変えられるようにするべきかも
@@ -53,9 +52,9 @@ func fetchImage(url string) (io.Reader, string, error) {
 	}
 
 	// bodyをbytes.Readerに変換して返す
-	imageReader := bytes.NewReader(body)
+	//imageReader := bytes.NewReader(body)
 
-	return imageReader, contentType, nil
+	return &body, contentType, nil
 }
 
 func downloadFile(url string, maxSize int64) (*http.Response, error) {
