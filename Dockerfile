@@ -19,4 +19,4 @@ RUN apk add tini libwebp --no-cache \
 
 
 USER app
-CMD ["tini", "--", "/app/relay"]
+CMD ["tini", "--", "/app/mediaproxy"]
