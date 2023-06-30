@@ -65,8 +65,17 @@ func RequestHandler(ctx *fasthttp.RequestCtx) {
 				proxiedImage = media.ProxyImage(url, 3200, 3200, isStatic)
 			}
 
+			// media.ProxyImage()のどこかでpanicになった場合の処理
+			defer func() {
+				if r := recover(); r != nil {
+					// パニックが発生した場合、エラーレスポンスを返します
+					core.MsgErr(fmt.Sprintf("Panic occurred while proxying media: %s", r.(error)))
+					ctx.Error("Internal Server Error", fasthttp.StatusInternalServerError)
+				}
+			}()
+
 			if proxiedImage == nil {
-				ctx.Error("Internal server error", fasthttp.StatusInternalServerError)
+				ctx.Error("Bad request", fasthttp.StatusBadRequest)
 				return
 			}
 

@@ -9,6 +9,7 @@ import (
 	"github.com/sizeofint/webpanimation"
 	"github.com/srwiley/oksvg"
 	"github.com/srwiley/rasterx"
+	_ "github.com/strukturag/libheif/go/heif"
 	"image"
 	"image/gif"
 	_ "image/gif"
@@ -50,7 +51,7 @@ func decodeStaticImage(imageBuffer io.Reader, contentType string) (image.Image, 
 		core.MsgDebug("Decode as webp")
 		img, errDecode = webp.Decode(imageBuffer, &decoder.Options{})
 	default:
-		core.MsgDebug("Decode as png/jpeg")
+		core.MsgDebug("Decode as png/jpeg/heif")
 		img, _, errDecode = image.Decode(imageBuffer)
 	}
 

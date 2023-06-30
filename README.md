@@ -8,6 +8,7 @@ MisskeyのMediaProxyとして使える、Goで書かれた軽量なMediaProxy
 
 #### ビルド依存関係
  - libwebp-dev (RHEL系ならlibwebp-devel)
+ - libheif-dev
  - Go (**バージョン1.18以上**)
 
 ### 注意事項
