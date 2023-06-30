@@ -1,7 +1,6 @@
 package media
 
 import (
-	"bytes"
 	"io/ioutil"
 	"testing"
 )
@@ -19,7 +18,7 @@ func TestIsAPNG(t *testing.T) {
 
 	imageBuffer.Reset()
 
-	if !isAnimatedPNG(bytes.NewReader(fetchedImage)) {
+	if !isAnimatedPNG(&fetchedImage) {
 		t.Errorf("isAnimatedPng returned incorrect results")
 	}
 }
