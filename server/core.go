@@ -7,7 +7,6 @@ import (
 	"git.sda1.net/media-proxy-go/media"
 	"git.sda1.net/media-proxy-go/security"
 	"github.com/valyala/fasthttp"
-	"strings"
 )
 
 func RequestHandler(ctx *fasthttp.RequestCtx) {
@@ -16,7 +15,7 @@ func RequestHandler(ctx *fasthttp.RequestCtx) {
 	core.MsgInfo(fmt.Sprintf("Handled request: %s", path))
 
 	switch path {
-	case "/":
+	case "/status":
 		status := Status{Status: "OK"}
 		jsonData, err := json.Marshal(status)
 		if err != nil {
@@ -27,63 +26,59 @@ func RequestHandler(ctx *fasthttp.RequestCtx) {
 		ctx.Write(jsonData)
 
 	default:
-		if strings.HasSuffix(string(ctx.Path()), ".webp") {
-			queryArgs := ctx.QueryArgs()
-			url := string(queryArgs.Peek("url"))
-			isAvatar := string(queryArgs.Peek("avatar")) == "1"
-			isEmoji := string(queryArgs.Peek("emoji")) == "1"
-			isStatic := string(queryArgs.Peek("static")) == "1"
-			isPreview := string(queryArgs.Peek("preview")) == "1"
-			isBadge := string(queryArgs.Peek("badge")) == "1"
+		queryArgs := ctx.QueryArgs()
+		url := string(queryArgs.Peek("url"))
+		isAvatar := string(queryArgs.Peek("avatar")) == "1"
+		isEmoji := string(queryArgs.Peek("emoji")) == "1"
+		isStatic := string(queryArgs.Peek("static")) == "1"
+		isPreview := string(queryArgs.Peek("preview")) == "1"
+		isBadge := string(queryArgs.Peek("badge")) == "1"
 
-			if url == "" {
-				ctx.Error("Bad request", fasthttp.StatusBadRequest)
-				return
-			}
-
-			// ポートが指定されている、ホスト名がプライベートアドレスを示している場合はブロック
-			if !security.IsSafeUrl(url) {
-				ctx.Error("Access denied", fasthttp.StatusForbidden)
-				return
-			}
-
-			var proxiedImage []byte
-
-			if isAvatar {
-				// アバター用
-				proxiedImage = media.ProxyImage(url, 0, 320, isStatic)
-			} else if isEmoji {
-				// 絵文字用
-				proxiedImage = media.ProxyImage(url, 0, 128, isStatic)
-			} else if isPreview {
-				proxiedImage = media.ProxyImage(url, 200, 200, isStatic)
-			} else if isBadge {
-				proxiedImage = media.ProxyImage(url, 96, 96, true)
-			} else {
-				// TODO: Misskeyの仕様的にはsvgでない場合、無変換でプロキシするのが望ましいらしい (ref: https://github.com/misskey-dev/media-proxy/blob/master/SPECIFICATION.md#%E5%A4%89%E6%8F%9B%E3%82%AF%E3%82%A8%E3%83%AA%E3%81%8C%E5%AD%98%E5%9C%A8%E3%81%97%E3%81%AA%E3%81%84%E5%A0%B4%E5%90%88%E3%81%AE%E6%8C%99%E5%8B%95)
-				// ただしこれがないと爆弾画像とか送りつけられるしトランスコードした方がセキュリティ的にも安心な気がする
-				proxiedImage = media.ProxyImage(url, 3200, 3200, isStatic)
-			}
-
-			// media.ProxyImage()のどこかでpanicになった場合の処理
-			defer func() {
-				if r := recover(); r != nil {
-					// パニックが発生した場合、エラーレスポンスを返します
-					core.MsgErr(fmt.Sprintf("Panic occurred while proxying media: %s", r.(error)))
-					ctx.Error("Internal Server Error", fasthttp.StatusInternalServerError)
-				}
-			}()
-
-			if proxiedImage == nil {
-				ctx.Error("Bad request", fasthttp.StatusBadRequest)
-				return
-			}
-
-			ctx.Response.Header.SetContentType("image/webp")
-			ctx.Response.SetBody(proxiedImage)
-		} else {
-			ctx.Error("Not found", fasthttp.StatusNotFound)
+		if url == "" {
+			ctx.Error("Bad request", fasthttp.StatusBadRequest)
+			return
 		}
+
+		// ポートが指定されている、ホスト名がプライベートアドレスを示している場合はブロック
+		if !security.IsSafeUrl(url) {
+			ctx.Error("Access denied", fasthttp.StatusForbidden)
+			return
+		}
+
+		var proxiedImage []byte
+
+		if isAvatar {
+			// アバター用
+			proxiedImage = media.ProxyImage(url, 0, 320, isStatic)
+		} else if isEmoji {
+			// 絵文字用
+			proxiedImage = media.ProxyImage(url, 0, 128, isStatic)
+		} else if isPreview {
+			proxiedImage = media.ProxyImage(url, 200, 200, isStatic)
+		} else if isBadge {
+			proxiedImage = media.ProxyImage(url, 96, 96, true)
+		} else {
+			// TODO: Misskeyの仕様的にはsvgでない場合、無変換でプロキシするのが望ましいらしい (ref: https://github.com/misskey-dev/media-proxy/blob/master/SPECIFICATION.md#%E5%A4%89%E6%8F%9B%E3%82%AF%E3%82%A8%E3%83%AA%E3%81%8C%E5%AD%98%E5%9C%A8%E3%81%97%E3%81%AA%E3%81%84%E5%A0%B4%E5%90%88%E3%81%AE%E6%8C%99%E5%8B%95)
+			// ただしこれがないと爆弾画像とか送りつけられるしトランスコードした方がセキュリティ的にも安心な気がする
+			proxiedImage = media.ProxyImage(url, 3200, 3200, isStatic)
+		}
+
+		// media.ProxyImage()のどこかでpanicになった場合の処理
+		defer func() {
+			if r := recover(); r != nil {
+				// パニックが発生した場合、エラーレスポンスを返します
+				core.MsgErr(fmt.Sprintf("Panic occurred while proxying media: %s", r.(error)))
+				ctx.Error("Internal Server Error", fasthttp.StatusInternalServerError)
+			}
+		}()
+
+		if proxiedImage == nil {
+			ctx.Error("Bad request", fasthttp.StatusBadRequest)
+			return
+		}
+
+		ctx.Response.Header.SetContentType("image/webp")
+		ctx.Response.SetBody(proxiedImage)
 
 	}
 }
