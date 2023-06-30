@@ -8,6 +8,7 @@ import (
 	"github.com/kolesa-team/go-webp/encoder"
 	"github.com/kolesa-team/go-webp/webp"
 	"image"
+	"io"
 	"io/ioutil"
 )
 
@@ -26,11 +27,11 @@ func isStaticFormat(contentType string) bool {
 	}
 }
 
-func isStaticImage(contentType string, fetchedImage []byte) bool {
-	if contentType == "image/png" && !isAnimatedPNG(bytes.NewReader(fetchedImage)) {
+func isStaticImage(contentType string, bodyReader io.Reader) bool {
+	if contentType == "image/png" && !isAnimatedPNG(bodyReader) {
 		return true
 	}
-	if contentType == "image/webp" && !isAnimatedWebP(bytes.NewReader(fetchedImage)) {
+	if contentType == "image/webp" && !isAnimatedWebP(bodyReader) {
 		return true
 	}
 	core.MsgDebug("Animated")
@@ -67,7 +68,7 @@ func ProxyImage(url string, widthLimit int, heightLimit int, isStatic bool) []by
 		// TODO: SVG対応
 		return nil
 
-	} else if isStaticFormat(contentType) || isStaticImage(contentType, fetchedImage) || isStatic {
+	} else if isStaticFormat(contentType) || isStaticImage(contentType, bytes.NewReader(fetchedImage)) || isStatic {
 
 		// 完全に静止画像のフォーマット or apngでない or static指定 ならdecodeStaticImageでデコードする
 		img, err = decodeStaticImage(bytes.NewReader(fetchedImage), contentType)
@@ -107,15 +108,7 @@ func ProxyImage(url string, widthLimit int, heightLimit int, isStatic bool) []by
 		// どれにも当てはまらないかつブラウザセーフな形式ならそのままプロキシ
 		// AVIFは敢えて無変換でプロキシする（サイズがwebpより小さくEdgeユーザーの存在を無視すれば変換する意義がほぼない）
 		core.MsgDebug("Proxy image without transcode")
-
-		imgBytes, err := ioutil.ReadAll(bytes.NewReader(fetchedImage))
-
-		if err != nil {
-			core.MsgWarn(fmt.Sprintf("Failed to proxy media: %v", err))
-			return nil
-		} else {
-			return imgBytes
-		}
+		return fetchedImage
 
 	}
 
