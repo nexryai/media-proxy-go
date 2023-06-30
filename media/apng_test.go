@@ -22,3 +22,21 @@ func TestIsAPNG(t *testing.T) {
 		t.Errorf("isAnimatedPng returned incorrect results")
 	}
 }
+
+func TestIsAnimatedWebP(t *testing.T) {
+	imageBuffer, _, err := fetchImage("https://mathiasbynens.be/demo/animated-webp-supported.webp")
+	if err != nil {
+		t.Errorf("fetchImage returned an error: %v", err)
+	}
+
+	fetchedImage, err := ioutil.ReadAll(imageBuffer)
+	if err != nil {
+		t.Errorf("ioutil returned an error: %v", err)
+	}
+
+	imageBuffer.Reset()
+
+	if !isAnimatedWebP(&fetchedImage) {
+		t.Errorf("isAnimatedPng returned incorrect results")
+	}
+}
