@@ -34,8 +34,13 @@ func fetchImage(url string) (*bytes.Buffer, string, error) {
 	//contentType := resp.Header.Get("Content-Type")
 
 	body, _ := ioutil.ReadAll(resp.Body)
-
 	contentType := http.DetectContentType(body)
+
+	// SVGが平文扱いになるのをなんとかする
+	if contentType == "text/plain; charset=utf-8" && resp.Header.Get("Content-Type") == "image/svg+xml" {
+		contentType = "image/svg+xml"
+	}
+
 	core.MsgDebug("Detected MIME: " + contentType)
 
 	if resp.StatusCode != http.StatusOK {
@@ -47,15 +52,6 @@ func fetchImage(url string) (*bytes.Buffer, string, error) {
 	}
 
 	//var bodyReader io.ReadCloser = resp.Body
-
-	// SVGなら一旦webpにする
-	if contentType == "image/svg+xml" {
-		body = convertSvgToWebp(resp)
-		resp.Body.Close() // 元のレスポンスを閉じる
-		if err != nil {
-			return nil, contentType, fmt.Errorf("failed to convert SVG to WebP: %v", err)
-		}
-	}
 
 	imageBuffer := bytes.NewBuffer(body)
 

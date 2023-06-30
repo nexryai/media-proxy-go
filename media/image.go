@@ -4,11 +4,8 @@ import (
 	"bytes"
 	"git.sda1.net/media-proxy-go/core"
 	"github.com/kolesa-team/go-webp/decoder"
-	"github.com/kolesa-team/go-webp/encoder"
 	"github.com/kolesa-team/go-webp/webp"
 	"github.com/sizeofint/webpanimation"
-	"github.com/srwiley/oksvg"
-	"github.com/srwiley/rasterx"
 	// ref: https://github.com/strukturag/libheif/issues/824
 	// _ "github.com/strukturag/libheif/go/heif"
 	"image"
@@ -18,28 +15,7 @@ import (
 	_ "image/png"
 	"io"
 	"log"
-	"net/http"
 )
-
-// svgをwebpに変換する
-func convertSvgToWebp(resp *http.Response) []byte {
-	w, h := 512, 512
-
-	icon, _ := oksvg.ReadIconStream(resp.Body)
-	icon.SetTarget(0, 0, float64(w), float64(h))
-	rgba := image.NewRGBA(image.Rect(0, 0, w, h))
-	icon.Draw(rasterx.NewDasher(w, h, rasterx.NewScannerGV(w, h, rgba, rgba.Bounds())), 1)
-
-	var buf bytes.Buffer
-	options, _ := encoder.NewLossyEncoderOptions(encoder.PresetDefault, 75)
-	errEncode := webp.Encode(&buf, rgba, options)
-	if errEncode != nil {
-		return nil
-	}
-
-	return buf.Bytes()
-
-}
 
 // 画像をデコードし、image.Image型で返す
 func decodeStaticImage(imageBuffer io.Reader, contentType string) (image.Image, error) {
