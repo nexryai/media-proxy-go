@@ -1,6 +1,7 @@
 package media
 
 import (
+	"bytes"
 	"git.sda1.net/media-proxy-go/core"
 	"github.com/kolesa-team/go-webp/decoder"
 	"github.com/kolesa-team/go-webp/webp"
@@ -10,13 +11,14 @@ import (
 	_ "image/gif"
 	_ "image/jpeg"
 	_ "image/png"
-	"io"
 )
 
 // 画像をデコードし、image.Image型で返す
-func decodeStaticImage(imageReader io.Reader, contentType string) (image.Image, error) {
+func decodeStaticImage(imageBufferPtr *[]byte, contentType string) (image.Image, error) {
 	var img image.Image
 	var errDecode error
+
+	imageReader := bytes.NewReader(*imageBufferPtr)
 
 	// 適切なデコーダーを使用して画像をデコード
 	switch contentType {

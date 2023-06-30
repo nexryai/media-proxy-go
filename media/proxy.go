@@ -46,19 +46,16 @@ func ProxyImage(url string, widthLimit int, heightLimit int, isStatic bool) []by
 		return nil
 	}
 
-	// FIXME: これがメモリリークの原因な気がするけどimageReaderは一度参照すると二度目以降参照できなくなる
-	fetchedImage := *imageBufferPtr
-
 	core.MsgDebug("Content-Type: " + contentType)
 
 	if contentType == "image/svg+xml" {
 		// TODO: SVG対応
 		return nil
 
-	} else if isStaticFormat(contentType) || isStaticImage(contentType, &fetchedImage) || isStatic {
+	} else if isStaticFormat(contentType) || isStaticImage(contentType, imageBufferPtr) || isStatic {
 
 		// 完全に静止画像のフォーマット or apngでない or static指定 ならdecodeStaticImageでデコードする
-		img, err = decodeStaticImage(bytes.NewReader(fetchedImage), contentType)
+		img, err = decodeStaticImage(imageBufferPtr, contentType)
 
 		if err != nil {
 			core.MsgWarn(fmt.Sprintf("Failed to decode image: %v", err))
@@ -94,7 +91,7 @@ func ProxyImage(url string, widthLimit int, heightLimit int, isStatic bool) []by
 		// どれにも当てはまらないかつブラウザセーフな形式ならそのままプロキシ
 		// AVIFは敢えて無変換でプロキシする（サイズがwebpより小さくEdgeユーザーの存在を無視すれば変換する意義がほぼない）
 		core.MsgDebug("Proxy image without transcode")
-		return fetchedImage
+		return *imageBufferPtr
 
 	}
 

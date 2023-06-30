@@ -1,25 +1,16 @@
 package media
 
 import (
-	"bytes"
-	"io/ioutil"
 	"testing"
 )
 
 func testDecodeStaticImageFromUrl(t *testing.T, url string, contentType string, expectedImageWidth int, expectedImageHeight int) {
-	imageBuffer, _, err := fetchImage(url)
+	imageBufferPtr, _, err := fetchImage(url)
 	if err != nil {
 		t.Errorf("fetchImage returned an error: %v", err)
 	}
-
-	fetchedImage, err := ioutil.ReadAll(imageBuffer)
-	if err != nil {
-		t.Errorf("ioutil returned an error: %v", err)
-	}
-
-	imageBuffer.Reset()
-
-	img, errDecode := decodeStaticImage(bytes.NewReader(fetchedImage), contentType)
+	
+	img, errDecode := decodeStaticImage(imageBufferPtr, contentType)
 	if errDecode != nil {
 		t.Errorf("decodeStaticImage returned an error: %v", errDecode)
 	}

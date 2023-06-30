@@ -1,6 +1,7 @@
 package media
 
 import (
+	"bytes"
 	"image/jpeg"
 	"image/png"
 	"testing"
@@ -8,7 +9,7 @@ import (
 
 func testFetchImageFromUrl(t *testing.T, url string, expectedContentType string) {
 	// テスト対象の関数を呼び出し
-	imageBuffer, contentType, err := fetchImage(url)
+	imageBufferPtr, contentType, err := fetchImage(url)
 	if err != nil {
 		t.Errorf("fetchImage returned an error: %v", err)
 	}
@@ -18,14 +19,16 @@ func testFetchImageFromUrl(t *testing.T, url string, expectedContentType string)
 		t.Errorf("Unexpected content type. Expected: %s, Got: %s", expectedContentType, contentType)
 	}
 
+	imageReader := bytes.NewReader(*imageBufferPtr)
+
 	// デコードできるか検証
 	if expectedContentType == "image/png" {
-		_, errDecode := png.Decode(imageBuffer)
+		_, errDecode := png.Decode(imageReader)
 		if errDecode != nil {
 			t.Errorf("Failed to decode fetched png %v", errDecode)
 		}
 	} else if expectedContentType == "image/jpeg" {
-		_, errDecode := jpeg.Decode(imageBuffer)
+		_, errDecode := jpeg.Decode(imageReader)
 		if errDecode != nil {
 			t.Errorf("Failed to decode fetched jpeg %v", errDecode)
 		}
