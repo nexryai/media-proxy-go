@@ -12,7 +12,7 @@ COPY --from=builder /build/mediaproxy /app/mediaproxy
 
 RUN apt update \
  && apt install -y tini libwebp6 \
- && groupadd -g "991" misskey \
+ && groupadd -g "991" app \
  && useradd -l -u "991" -g "991" -m -d /app app \
  && chown -R app:app /app \
  && chmod +x /app/mediaproxy \
