@@ -20,12 +20,21 @@ func isStaticFormat(contentType string) bool {
 		return true
 	case "image/heif":
 		return true
-	case "image/webp":
-		return true
 	default:
 		// pngはapngがあるのでfalse
 		return false
 	}
+}
+
+func isStaticImage(contentType string, fetchedImage []byte) bool {
+	if contentType == "image/png" && !isAnimatedPNG(bytes.NewReader(fetchedImage)) {
+		return true
+	}
+	if contentType == "image/webp" && !isAnimatedWebP(bytes.NewReader(fetchedImage)) {
+		return true
+	}
+	core.MsgDebug("Animated")
+	return false
 }
 
 func ProxyImage(url string, widthLimit int, heightLimit int, isStatic bool) []byte {
@@ -54,7 +63,11 @@ func ProxyImage(url string, widthLimit int, heightLimit int, isStatic bool) []by
 			return imgBytes
 		}
 
-	} else if isStaticFormat(contentType) || (contentType == "image/png" && !isAnimatedPNG(bytes.NewReader(fetchedImage))) || isStatic {
+	} else if contentType == "image/svg+xml" {
+		// TODO: SVG対応
+		return nil
+
+	} else if isStaticFormat(contentType) || isStaticImage(contentType, fetchedImage) || isStatic {
 
 		// 完全に静止画像のフォーマット or apngでない or static指定 ならdecodeStaticImageでデコードする
 		img, err = decodeStaticImage(bytes.NewReader(fetchedImage), contentType)
@@ -104,8 +117,8 @@ func ProxyImage(url string, widthLimit int, heightLimit int, isStatic bool) []by
 			return imgBytes
 		}
 
-	} else {
-		//どれにも当てはまらないならnilを返してクライアントに400を返す
-		return nil
 	}
+
+	//どれにも当てはまらないならnilを返してクライアントに400を返す
+	return nil
 }

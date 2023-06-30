@@ -24,3 +24,16 @@ func isAnimatedPNG(bodyReader io.Reader) bool {
 	isAPNG := strings.Contains(string(data), "acTL")
 	return isAPNG
 }
+
+func isAnimatedWebP(bodyReader io.Reader) bool {
+	header := make([]byte, 34)
+	_, err := bodyReader.Read(header)
+	if err != nil {
+		return false
+	}
+
+	// ファイルのヘッダーをチェック
+	// Animated WebPの場合、ファイルの0x1Eから0x22がANIMになる
+	isAnimated := string(header[0x1E:0x22]) == "ANIM"
+	return isAnimated
+}
