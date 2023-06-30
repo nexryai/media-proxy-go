@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"git.sda1.net/media-proxy-go/core"
 	"git.sda1.net/media-proxy-go/server"
+	"github.com/pkg/profile"
 	"github.com/valyala/fasthttp"
 )
 
@@ -14,6 +15,7 @@ func createServer(listenPort string) {
 }
 
 func main() {
+	defer profile.Start(profile.MemProfile, profile.ProfilePath(".")).Stop()
 	core.MsgInfo("Starting media-proxy-go ...")
 	createServer("8080")
 }

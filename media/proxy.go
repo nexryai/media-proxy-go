@@ -7,7 +7,6 @@ import (
 	"github.com/kolesa-team/go-webp/encoder"
 	"github.com/kolesa-team/go-webp/webp"
 	"image"
-	"io"
 	"io/ioutil"
 )
 
@@ -24,20 +23,6 @@ func ProxyImage(url string, widthLimit int, heightLimit int, isStatic bool) []by
 	// 何回も参照できるようにコピー
 	fetchedImage, err := ioutil.ReadAll(imageBuffer)
 	imageBuffer.Reset()
-
-	imgDebug, errDebug := decodeStaticImage(bytes.NewReader(fetchedImage), contentType)
-	if err != nil {
-		fmt.Println("Error:", errDebug)
-	} else {
-		fmt.Println(imgDebug.Bounds())
-	}
-
-	imgDebug, errDebug = decodeStaticImage(bytes.NewReader(fetchedImage), contentType)
-	if err != nil {
-		fmt.Println("Error:", errDebug)
-	} else {
-		fmt.Println(imgDebug.Bounds())
-	}
 
 	core.MsgDebug("Content-Type: " + contentType)
 
@@ -92,23 +77,5 @@ func ProxyImage(url string, widthLimit int, heightLimit int, isStatic bool) []by
 		return nil
 	}
 
-	// buf.Bytes()を直接返すとメモリリークの原因になる
-	encodedImg := make([]byte, buf.Len())
-	copy(encodedImg, buf.Bytes())
-
-	return encodedImg
-}
-
-func decodeImageDebug(bodyReader io.Reader) (image.Image, error) {
-	body, err := ioutil.ReadAll(bodyReader)
-	if err != nil {
-		return nil, err
-	}
-
-	img, _, err := image.Decode(bytes.NewReader(body))
-	if err != nil {
-		return nil, err
-	}
-
-	return img, nil
+	return buf.Bytes()
 }
