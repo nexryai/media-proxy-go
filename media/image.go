@@ -9,7 +9,8 @@ import (
 	"github.com/sizeofint/webpanimation"
 	"github.com/srwiley/oksvg"
 	"github.com/srwiley/rasterx"
-	_ "github.com/strukturag/libheif/go/heif"
+	// ref: https://github.com/strukturag/libheif/issues/824
+	// _ "github.com/strukturag/libheif/go/heif"
 	"image"
 	"image/gif"
 	_ "image/gif"
