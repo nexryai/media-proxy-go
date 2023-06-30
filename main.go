@@ -15,7 +15,9 @@ func createServer(listenPort string) {
 }
 
 func main() {
-	defer profile.Start(profile.MemProfile, profile.ProfilePath(".")).Stop()
+	if core.IsDebugMode() {
+		defer profile.Start(profile.MemProfile, profile.ProfilePath(".")).Stop()
+	}
 	core.MsgInfo("Starting media-proxy-go ...")
 	createServer("8080")
 }
