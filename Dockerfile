@@ -1,5 +1,5 @@
 FROM golang:1.20 as builder
-WORKDIR /app
+WORKDIR /build
 
 COPY . ./
 
@@ -8,7 +8,7 @@ RUN apt update && apt -y install libwebp-dev \
 
 FROM alpine:latest
 
-COPY --from=builder /app /app
+COPY --from=builder /build/mediaproxy /app/mediaproxy
 
 RUN apk add tini libwebp --no-cache \
  && addgroup -g 1000 app \
