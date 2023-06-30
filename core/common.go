@@ -14,8 +14,7 @@ var yellow = "\033[33m"
 var gray = "\033[37m"
 
 func IsDebugMode() bool {
-	//return os.Getenv("DEBUG_MODE") == "true"
-	return true
+	return os.Getenv("DEBUG_MODE") == "true"
 }
 
 func MsgInfo(text string) {
