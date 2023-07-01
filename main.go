@@ -5,7 +5,6 @@ import (
 	"git.sda1.net/media-proxy-go/core"
 	"git.sda1.net/media-proxy-go/server"
 	"github.com/valyala/fasthttp"
-	"net/http"
 	"os"
 	"strconv"
 )
@@ -13,15 +12,10 @@ import (
 func createServer(port int) {
 	listenPort := strconv.Itoa(port)
 	core.MsgInfo("listens on port " + listenPort)
-	if lowMemoryMode() {
-		core.MsgInfo("Use low memory mode!")
-		http.HandleFunc("/", server.RequestHandlerLowMemoryMode)
-		err := http.ListenAndServe(fmt.Sprintf(":%s", listenPort), nil)
-		core.ExitOnError(err, "Failed to create server")
-	} else {
-		err := fasthttp.ListenAndServe(fmt.Sprintf(":%s", listenPort), server.RequestHandler)
-		core.ExitOnError(err, "Failed to create server")
-	}
+
+	err := fasthttp.ListenAndServe(fmt.Sprintf(":%s", listenPort), server.RequestHandler)
+	core.ExitOnError(err, "Failed to create server")
+
 }
 
 func getPort() int {
