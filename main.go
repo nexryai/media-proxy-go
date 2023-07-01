@@ -52,6 +52,10 @@ func lowMemoryMode() bool {
 
 func main() {
 	core.MsgInfo("Starting media-proxy-go ...")
+	if core.IsDebugMode() {
+		fmt.Println("\u001B[31m@@>>>>> Debug mode is enabled!!! NEVER use this in a production environment!! Debugging endpoints can leak sensitive information!!!!! <<<<<@@\u001B[0m")
+	}
+
 	port := getPort()
 	createServer(port)
 }
