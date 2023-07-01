@@ -14,7 +14,7 @@ import (
 )
 
 // 画像をデコードし、image.Image型で返す
-func decodeStaticImage(imageBufferPtr *[]byte, contentType string) (image.Image, error) {
+func decodeStaticImage(imageBufferPtr *[]byte, contentType string) (*image.Image, error) {
 	var img image.Image
 	var errDecode error
 
@@ -34,5 +34,5 @@ func decodeStaticImage(imageBufferPtr *[]byte, contentType string) (image.Image,
 		return nil, errDecode
 	}
 
-	return img, nil
+	return &img, nil
 }

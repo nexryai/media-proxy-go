@@ -48,7 +48,7 @@ func RequestHandler(ctx *fasthttp.RequestCtx) {
 			return
 		}
 
-		var proxiedImage []byte
+		var proxiedImage *[]byte
 
 		if isAvatar {
 			// アバター用
@@ -74,13 +74,13 @@ func RequestHandler(ctx *fasthttp.RequestCtx) {
 			}
 		}()
 
-		if proxiedImage == nil {
+		if *proxiedImage == nil {
 			ctx.Error("Bad request", fasthttp.StatusBadRequest)
 			return
 		}
 
-		ctx.Response.Header.SetContentType("image/webp")
-		ctx.Response.SetBody(proxiedImage)
+		//ctx.Response.Header.SetContentType("image/webp")
+		ctx.Response.SetBody(*proxiedImage)
 
 	}
 }
@@ -132,7 +132,7 @@ func RequestHandlerLowMemoryMode(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		var proxiedImage []byte
+		var proxiedImage *[]byte
 
 		if isAvatar {
 			proxiedImage = media.ProxyImage(url, 0, 320, isStatic)
@@ -153,12 +153,12 @@ func RequestHandlerLowMemoryMode(w http.ResponseWriter, r *http.Request) {
 			}
 		}()
 
-		if proxiedImage == nil {
+		if *proxiedImage == nil {
 			http.Error(w, "Bad request", http.StatusBadRequest)
 			return
 		}
 
-		w.Header().Set("Content-Type", "image/webp")
-		w.Write(proxiedImage)
+		//w.Header().Set("Content-Type", "image/webp")
+		w.Write(*proxiedImage)
 	}
 }

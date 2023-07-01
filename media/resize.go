@@ -5,8 +5,8 @@ import (
 	"image"
 )
 
-func resizeImage(img image.Image, width, height int) image.Image {
-	bounds := img.Bounds()
+func resizeImage(img *image.Image, width, height int) image.Image {
+	bounds := (*img).Bounds()
 	imgWidth := bounds.Dx()
 	imgHeight := bounds.Dy()
 
@@ -18,6 +18,7 @@ func resizeImage(img image.Image, width, height int) image.Image {
 	}
 
 	resizedImg := image.NewRGBA(image.Rect(0, 0, width, height))
-	draw.CatmullRom.Scale(resizedImg, resizedImg.Bounds(), img, img.Bounds(), draw.Over, nil)
+	draw.CatmullRom.Scale(resizedImg, resizedImg.Bounds(), *img, (*img).Bounds(), draw.Over, nil)
+
 	return resizedImg
 }

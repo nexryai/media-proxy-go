@@ -15,7 +15,7 @@ func testProxyImageDecodingFromUrl(t *testing.T, url string, widthLimit int, hei
 	}
 
 	// WebP画像のデコード
-	img, err := webp.Decode(bytes.NewReader(imageBytes))
+	img, err := webp.Decode(bytes.NewReader(*imageBytes))
 	if err != nil {
 		t.Fatalf("Failed to decode returnd WebP image: %v", err)
 	}

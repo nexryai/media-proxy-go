@@ -15,7 +15,7 @@ func testDecodeStaticImageFromUrl(t *testing.T, url string, contentType string, 
 		t.Errorf("decodeStaticImage returned an error: %v", errDecode)
 	}
 
-	bounds := img.Bounds()
+	bounds := (*img).Bounds()
 	imgWidth := bounds.Dx()
 	imgHeight := bounds.Dy()
 

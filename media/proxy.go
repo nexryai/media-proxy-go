@@ -36,9 +36,9 @@ func isStaticImage(contentType string, fetchedImage *[]byte) bool {
 	return false
 }
 
-func ProxyImage(url string, widthLimit int, heightLimit int, isStatic bool) []byte {
+func ProxyImage(url string, widthLimit int, heightLimit int, isStatic bool) *[]byte {
 
-	var img image.Image
+	var img *image.Image
 
 	imageBufferPtr, contentType, err := fetchImage(url)
 	if err != nil {
@@ -67,9 +67,9 @@ func ProxyImage(url string, widthLimit int, heightLimit int, isStatic bool) []by
 		// widthLimitかheightLimitを超えている場合のみ処理する
 		core.MsgDebug(fmt.Sprintf("widthLimit: %d  heightLimit: %d", widthLimit, heightLimit))
 
-		if img.Bounds().Dx() > widthLimit || img.Bounds().Dy() > heightLimit {
+		if (*img).Bounds().Dx() > widthLimit || (*img).Bounds().Dy() > heightLimit {
 			resizedImg := resizeImage(img, widthLimit, heightLimit)
-			img = resizedImg
+			img = &resizedImg
 		}
 
 		var buf bytes.Buffer
@@ -80,18 +80,21 @@ func ProxyImage(url string, widthLimit int, heightLimit int, isStatic bool) []by
 			return nil
 		}
 
-		errEncode := webp.Encode(&buf, img, options)
+		errEncode := webp.Encode(&buf, *img, options)
 		if errEncode != nil {
 			return nil
 		}
 
-		return buf.Bytes()
+		imageBytes := buf.Bytes()
+		buf.Reset()
+
+		return &imageBytes
 
 	} else if security.IsFileTypeBrowserSafe(contentType) {
 		// どれにも当てはまらないかつブラウザセーフな形式ならそのままプロキシ
 		// AVIFは敢えて無変換でプロキシする（サイズがwebpより小さくEdgeユーザーの存在を無視すれば変換する意義がほぼない）
 		core.MsgDebug("Proxy image without transcode")
-		return *imageBufferPtr
+		return imageBufferPtr
 
 	}
 
