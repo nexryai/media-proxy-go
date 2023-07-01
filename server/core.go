@@ -7,6 +7,9 @@ import (
 	"git.sda1.net/media-proxy-go/media"
 	"git.sda1.net/media-proxy-go/security"
 	"github.com/valyala/fasthttp"
+	"net/http"
+	"net/http/pprof"
+	"strings"
 )
 
 func RequestHandler(ctx *fasthttp.RequestCtx) {
@@ -79,5 +82,83 @@ func RequestHandler(ctx *fasthttp.RequestCtx) {
 		ctx.Response.Header.SetContentType("image/webp")
 		ctx.Response.SetBody(proxiedImage)
 
+	}
+}
+
+func RequestHandlerLowMemoryMode(w http.ResponseWriter, r *http.Request) {
+	path := r.URL.Path
+
+	core.MsgInfo(fmt.Sprintf("Handled request: %s", path))
+
+	if core.IsDebugMode() {
+		// pprofエンドポイントの追加
+		if path == "/debug/pprof/" {
+			pprof.Index(w, r)
+			return
+		} else if strings.HasPrefix(path, "/debug/pprof/") {
+			pprof.Handler(strings.TrimPrefix(path, "/debug/pprof/")).ServeHTTP(w, r)
+			return
+		}
+	}
+
+	switch path {
+	case "/status":
+		status := Status{Status: "OK"}
+		jsonData, err := json.Marshal(status)
+		if err != nil {
+			http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+			return
+		}
+		w.Header().Set("Content-Type", "application/json")
+		w.Write(jsonData)
+
+	default:
+		queryArgs := r.URL.Query()
+		url := queryArgs.Get("url")
+		isAvatar := queryArgs.Get("avatar") == "1"
+		isEmoji := queryArgs.Get("emoji") == "1"
+		isStatic := queryArgs.Get("static") == "1"
+		isPreview := queryArgs.Get("preview") == "1"
+		isBadge := queryArgs.Get("badge") == "1"
+
+		if url == "" {
+			http.Error(w, "Bad request", http.StatusBadRequest)
+			return
+		}
+
+		// ポートが指定されている、ホスト名がプライベートアドレスを示している場合はブロック
+		if !security.IsSafeUrl(url) {
+			http.Error(w, "Access denied", http.StatusForbidden)
+			return
+		}
+
+		var proxiedImage []byte
+
+		if isAvatar {
+			proxiedImage = media.ProxyImage(url, 0, 320, isStatic)
+		} else if isEmoji {
+			proxiedImage = media.ProxyImage(url, 0, 128, isStatic)
+		} else if isPreview {
+			proxiedImage = media.ProxyImage(url, 200, 200, isStatic)
+		} else if isBadge {
+			proxiedImage = media.ProxyImage(url, 96, 96, true)
+		} else {
+			proxiedImage = media.ProxyImage(url, 3200, 3200, isStatic)
+		}
+
+		defer func() {
+			if r := recover(); r != nil {
+				core.MsgErr(fmt.Sprintf("Panic occurred while proxying media: %s", r.(error)))
+				http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+			}
+		}()
+
+		if proxiedImage == nil {
+			http.Error(w, "Bad request", http.StatusBadRequest)
+			return
+		}
+
+		w.Header().Set("Content-Type", "image/webp")
+		w.Write(proxiedImage)
 	}
 }

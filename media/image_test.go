@@ -9,7 +9,7 @@ func testDecodeStaticImageFromUrl(t *testing.T, url string, contentType string, 
 	if err != nil {
 		t.Errorf("fetchImage returned an error: %v", err)
 	}
-	
+
 	img, errDecode := decodeStaticImage(imageBufferPtr, contentType)
 	if errDecode != nil {
 		t.Errorf("decodeStaticImage returned an error: %v", errDecode)
