@@ -9,7 +9,7 @@ import (
 func testProxyImageDecodingFromUrl(t *testing.T, url string, widthLimit int, heightLimit int, isStatic bool) {
 
 	// ProxyImage関数の呼び出し
-	imageBytes := ProxyImage(url, widthLimit, heightLimit, isStatic)
+	imageBytes, _ := ProxyImage(url, widthLimit, heightLimit, isStatic)
 	if imageBytes == nil {
 		t.Fatal("Failed to fetch and encode image")
 	}
