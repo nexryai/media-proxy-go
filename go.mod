@@ -5,6 +5,7 @@ go 1.20
 require (
 	github.com/kolesa-team/go-webp v1.0.4
 	github.com/pkg/profile v1.7.0
+	github.com/valyala/fasthttp v1.48.0
 	golang.org/x/image v0.8.0
 )
 
