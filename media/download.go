@@ -58,24 +58,11 @@ func fetchImage(url string) (*[]byte, string, error) {
 }
 
 func downloadFile(url string, maxSize int64) (*http.Response, error) {
-	client := &http.Client{}
-
-	// リクエストを作成
-	req, err := http.NewRequest("GET", url, nil)
+	resp, err := http.Get(url)
 	if err != nil {
 		return nil, err
 	}
 
-	// ユーザーエージェントを設定
-	req.Header.Set("User-Agent", "Misskey-Media-Proxy-Go v0.10")
-
-	// リクエストを送信
-	resp, err := client.Do(req)
-	if err != nil {
-		return nil, err
-	}
-
-	// ファイルサイズが制限を超えているかチェック
 	contentLength := resp.Header.Get("Content-Length")
 	if contentLength != "" {
 		length, err := strconv.ParseInt(contentLength, 10, 64)
