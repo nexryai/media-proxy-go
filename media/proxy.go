@@ -77,13 +77,17 @@ func ProxyImage(url string, widthLimit int, heightLimit int, isStatic bool) (*[]
 			heightExcess := imgHeight - heightLimit
 
 			// widthLimitとheightLimitが両方超過してる場合、超過している部分が少ない方のlimitは0にして比率を維持する
-			if imgWidth > widthLimit && imgHeight > heightLimit {
-				if widthExcess < heightExcess {
-					widthLimit = 0
-				} else {
-					heightLimit = 0
+			if widthLimit != 0 && heightLimit != 0 {
+				if imgWidth > widthLimit && imgHeight > heightLimit {
+					if widthExcess < heightExcess {
+						widthLimit = 0
+					} else {
+						heightLimit = 0
+					}
 				}
 			}
+
+			core.MsgDebug(fmt.Sprintf("Final widthLimit: %d  heightLimit: %d", widthLimit, heightLimit))
 
 			resizedImg := resizeImage(img, widthLimit, heightLimit)
 			img = &resizedImg
