@@ -4,7 +4,7 @@ WORKDIR /build
 COPY . ./
 
 RUN apt update && apt -y install libwebp-dev \
- && go build -o mediaproxy main.go
+ && go build -ldflags="-s -w" -trimpath -o mediaproxy main.go
 
 FROM debian:bookworm-slim
 
