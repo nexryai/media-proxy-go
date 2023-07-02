@@ -83,10 +83,6 @@ func ProxyImage(url string, widthLimit int, heightLimit int, isStatic bool) (*[]
 				} else {
 					heightLimit = 0
 				}
-			} else if imgWidth > widthLimit {
-				widthLimit = 0
-			} else {
-				heightLimit = 0
 			}
 
 			resizedImg := resizeImage(img, widthLimit, heightLimit)
