@@ -21,7 +21,7 @@ jobs:
         run: sudo apt update && sudo apt install libwebp-dev libheif-dev
 
       - name: Build
-        run: go build -o mediaproxy main.go
+        run: go build -ldflags="-s -w" -trimpath -o mediaproxy main.go
 
       - name: Create release
         id: create_release
