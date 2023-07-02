@@ -7,6 +7,7 @@ import (
 	"git.sda1.net/media-proxy-go/media"
 	"git.sda1.net/media-proxy-go/security"
 	"github.com/valyala/fasthttp"
+	"runtime"
 )
 
 func RequestHandler(ctx *fasthttp.RequestCtx) {
@@ -79,6 +80,8 @@ func RequestHandler(ctx *fasthttp.RequestCtx) {
 
 		ctx.Response.Header.SetContentType(contentType)
 		ctx.Response.SetBody(*proxiedImage)
+
+		runtime.GC()
 
 	}
 }
