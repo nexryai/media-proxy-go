@@ -7,7 +7,6 @@ import (
 	"git.sda1.net/media-proxy-go/security"
 	"github.com/kolesa-team/go-webp/encoder"
 	"github.com/kolesa-team/go-webp/webp"
-	"gopkg.in/gographics/imagick.v3/imagick"
 )
 
 func isStaticFormat(contentType string) bool {
@@ -54,21 +53,23 @@ func ProxyImage(url string, widthLimit int, heightLimit int, isStatic bool, targ
 
 	} else if isStaticFormat(contentType) || isStaticImage(contentType, imageBufferPtr) || isStatic {
 
-		if core.IsDebugMode() {
-			img, err := convertAndResizeImage(imageBufferPtr, widthLimit, heightLimit, targetFormat)
-			imagick.Terminate()
+		/*
+			if core.IsDebugMode() {
+				img, err := convertAndResizeImage(imageBufferPtr, widthLimit, heightLimit, targetFormat)
+				imagick.Terminate()
 
-			if err != nil {
-				core.MsgWarn(fmt.Sprintf("Failed to decode image: %v", err))
-				return nil, contentType, fmt.Errorf("failed to decode image")
-			} else {
-				core.MsgDebug("Decode ok.")
+				if err != nil {
+					core.MsgWarn(fmt.Sprintf("Failed to decode image: %v", err))
+					return nil, contentType, fmt.Errorf("failed to decode image")
+				} else {
+					core.MsgDebug("Decode ok.")
+				}
+
+				contentType = fmt.Sprintf("image/%s", targetFormat)
+
+				return img, contentType, nil
 			}
-
-			contentType = fmt.Sprintf("image/%s", targetFormat)
-
-			return img, contentType, nil
-		}
+		*/
 
 		// 完全に静止画像のフォーマット or apngでない or static指定 ならdecodeStaticImageでデコードする
 		img, err := decodeStaticImage(imageBufferPtr, contentType)

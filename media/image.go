@@ -2,13 +2,9 @@ package media
 
 import (
 	"bytes"
-	"fmt"
 	"git.sda1.net/media-proxy-go/core"
 	"github.com/kolesa-team/go-webp/decoder"
 	"github.com/kolesa-team/go-webp/webp"
-	"gopkg.in/gographics/imagick.v3/imagick"
-	"math"
-
 	// ref: https://github.com/strukturag/libheif/issues/824
 	// _ "github.com/strukturag/libheif/go/heif"
 	"image"
@@ -41,6 +37,7 @@ func decodeStaticImage(imageBufferPtr *[]byte, contentType string) (*image.Image
 	return &img, nil
 }
 
+/*
 func convertAndResizeImage(imageBufferPtr *[]byte, widthLimit int, heightLimit int, targetFormat string) (*[]byte, error) {
 	// Imagickの初期化
 	imagick.Initialize()
@@ -123,3 +120,4 @@ func convertAndResizeImage(imageBufferPtr *[]byte, widthLimit int, heightLimit i
 
 	return &convertedData, nil
 }
+*/

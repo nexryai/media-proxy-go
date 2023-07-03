@@ -3,9 +3,7 @@ WORKDIR /build
 
 COPY . ./
 
-RUN echo "deb http://www.deb-multimedia.org bookworm main" >> /etc/apt/sources.list \
- && apt-get update && apt-get install -y --allow-unauthenticated deb-multimedia-keyring \
- && apt update && apt -y install libwebp-dev libmagickwand-7-dev \
+RUN apt update && apt -y install libwebp-dev \
  && go build -ldflags="-s -w" -trimpath -o mediaproxy main.go
 
 FROM debian:bookworm-slim

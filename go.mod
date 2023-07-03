@@ -17,5 +17,4 @@ require (
 	github.com/valyala/bytebufferpool v1.0.0 // indirect
 	golang.org/x/net v0.11.0 // indirect
 	golang.org/x/text v0.10.0 // indirect
-	gopkg.in/gographics/imagick.v3 v3.4.2 // indirect
 )
