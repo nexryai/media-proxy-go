@@ -34,6 +34,7 @@ func RequestHandler(ctx *fasthttp.RequestCtx) {
 		isStatic := string(queryArgs.Peek("static")) == "1"
 		isPreview := string(queryArgs.Peek("preview")) == "1"
 		isBadge := string(queryArgs.Peek("badge")) == "1"
+		useAvif := string(queryArgs.Peek("avif")) == "1"
 
 		if url == "" {
 			ctx.Error("Bad request", fasthttp.StatusBadRequest)
@@ -44,6 +45,11 @@ func RequestHandler(ctx *fasthttp.RequestCtx) {
 		if !security.IsSafeUrl(url) {
 			ctx.Error("Access denied", fasthttp.StatusForbidden)
 			return
+		}
+
+		targetFormat := "webp"
+		if useAvif {
+			targetFormat = "avif"
 		}
 
 		var proxiedImage *[]byte
@@ -61,17 +67,17 @@ func RequestHandler(ctx *fasthttp.RequestCtx) {
 
 		if isAvatar {
 			// アバター用
-			proxiedImage, contentType, err = media.ProxyImage(url, 0, 320, isStatic)
+			proxiedImage, contentType, err = media.ProxyImage(url, 0, 320, isStatic, targetFormat)
 		} else if isEmoji {
 			// 絵文字用
-			proxiedImage, contentType, err = media.ProxyImage(url, 0, 128, isStatic)
+			proxiedImage, contentType, err = media.ProxyImage(url, 0, 128, isStatic, targetFormat)
 		} else if isPreview {
-			proxiedImage, contentType, err = media.ProxyImage(url, 200, 200, isStatic)
+			proxiedImage, contentType, err = media.ProxyImage(url, 200, 200, isStatic, targetFormat)
 		} else if isBadge {
-			proxiedImage, contentType, err = media.ProxyImage(url, 96, 96, true)
+			proxiedImage, contentType, err = media.ProxyImage(url, 96, 96, true, targetFormat)
 		} else {
 			// TODO: Misskeyの仕様的にはsvgでない場合、無変換でプロキシするのが望ましいらしい (ref: https://github.com/misskey-dev/media-proxy/blob/master/SPECIFICATION.md#%E5%A4%89%E6%8F%9B%E3%82%AF%E3%82%A8%E3%83%AA%E3%81%8C%E5%AD%98%E5%9C%A8%E3%81%97%E3%81%AA%E3%81%84%E5%A0%B4%E5%90%88%E3%81%AE%E6%8C%99%E5%8B%95)
-			proxiedImage, contentType, err = media.ProxyImage(url, 3200, 3200, isStatic)
+			proxiedImage, contentType, err = media.ProxyImage(url, 3200, 3200, isStatic, targetFormat)
 		}
 
 		if err != nil {
