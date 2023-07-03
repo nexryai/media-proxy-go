@@ -3,7 +3,9 @@ WORKDIR /build
 
 COPY . ./
 
-RUN apt update && apt -y install libwebp-dev \
+RUN echo "deb http://www.deb-multimedia.org bookworm main" >> /etc/apt/sources.list \
+ && apt-get update && apt-get install -y --allow-unauthenticated deb-multimedia-keyring \
+ && apt update && apt -y install libwebp-dev libmagickwand-7-dev \
  && go build -ldflags="-s -w" -trimpath -o mediaproxy main.go
 
 FROM debian:bookworm-slim
@@ -11,7 +13,7 @@ FROM debian:bookworm-slim
 COPY --from=builder /build/mediaproxy /app/mediaproxy
 
 RUN apt update \
- && apt install -y tini libwebp7 ca-certificates openssl \
+ && apt install -y tini ca-certificates openssl libwebp7 \
  && groupadd -g "991" app \
  && useradd -l -u "991" -g "991" -m -d /app app \
  && chown -R app:app /app \
