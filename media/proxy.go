@@ -36,21 +36,21 @@ func isStaticImage(contentType string, fetchedImage *[]byte) bool {
 	return false
 }
 
-func ProxyImage(url string, widthLimit int, heightLimit int, isStatic bool) (*[]byte, string) {
+func ProxyImage(url string, widthLimit int, heightLimit int, isStatic bool) (*[]byte, string, error) {
 
 	var img *image.Image
 
 	imageBufferPtr, contentType, err := fetchImage(url)
 	if err != nil {
 		core.MsgErrWithDetail(err, "Failed to download image")
-		return nil, contentType
+		return nil, contentType, fmt.Errorf("failed to download image")
 	}
 
 	core.MsgDebug("Content-Type: " + contentType)
 
 	if contentType == "image/svg+xml" {
 		// TODO: SVG対応
-		return nil, contentType
+		return nil, contentType, fmt.Errorf("unsupported format")
 
 	} else if isStaticFormat(contentType) || isStaticImage(contentType, imageBufferPtr) || isStatic {
 
@@ -59,7 +59,7 @@ func ProxyImage(url string, widthLimit int, heightLimit int, isStatic bool) (*[]
 
 		if err != nil {
 			core.MsgWarn(fmt.Sprintf("Failed to decode image: %v", err))
-			return nil, contentType
+			return nil, contentType, fmt.Errorf("failed to decode image")
 		} else {
 			core.MsgDebug("Decode ok.")
 		}
@@ -69,6 +69,11 @@ func ProxyImage(url string, widthLimit int, heightLimit int, isStatic bool) (*[]
 
 		imgWidth := (*img).Bounds().Dx()
 		imgHeight := (*img).Bounds().Dy()
+
+		// 爆弾対策
+		if imgWidth > 5120 || imgHeight > 5120 {
+			return nil, contentType, fmt.Errorf("too large image")
+		}
 
 		if imgWidth > widthLimit || imgHeight > heightLimit {
 
@@ -98,27 +103,27 @@ func ProxyImage(url string, widthLimit int, heightLimit int, isStatic bool) (*[]
 		// TODO: エンコードオプション変えられるようにする
 		options, err := encoder.NewLossyEncoderOptions(encoder.PresetDefault, 75)
 		if err != nil {
-			return nil, contentType
+			return nil, contentType, fmt.Errorf("failed to encode webp")
 		}
 
 		errEncode := webp.Encode(&buf, *img, options)
 		if errEncode != nil {
-			return nil, contentType
+			return nil, contentType, fmt.Errorf("failed to encode webp")
 		}
 
 		imageBytes := buf.Bytes()
 		buf.Reset()
 
-		return &imageBytes, contentType
+		return &imageBytes, contentType, nil
 
 	} else if security.IsFileTypeBrowserSafe(contentType) {
 		// どれにも当てはまらないかつブラウザセーフな形式ならそのままプロキシ
 		// AVIFは敢えて無変換でプロキシする（サイズがwebpより小さくEdgeユーザーの存在を無視すれば変換する意義がほぼない）
 		core.MsgDebug("Proxy image without transcode")
-		return imageBufferPtr, contentType
+		return imageBufferPtr, contentType, nil
 
 	}
 
 	//どれにも当てはまらないならnilを返してクライアントに400を返す
-	return nil, contentType
+	return nil, contentType, nil
 }

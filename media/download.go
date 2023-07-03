@@ -1,13 +1,13 @@
 package media
 
 import (
+	"bytes"
 	"fmt"
 	"git.sda1.net/media-proxy-go/core"
 	_ "image/gif"
 	_ "image/jpeg"
 	_ "image/png"
 	"io"
-	"io/ioutil"
 	"net/http"
 	"strconv"
 )
@@ -32,8 +32,17 @@ func fetchImage(url string) (*[]byte, string, error) {
 	// これだと偽装できる
 	//contentType := resp.Header.Get("Content-Type")
 
-	body, _ := ioutil.ReadAll(resp.Body)
+	var buf bytes.Buffer
+	_, err = io.Copy(&buf, resp.Body)
+	if err != nil {
+		// エラーハンドリング
+		return nil, "", fmt.Errorf("failed to fetch image: %v", err)
+	}
+
+	body := buf.Bytes()
+
 	resp.Body.Close()
+	buf.Reset()
 
 	contentType := http.DetectContentType(body)
 

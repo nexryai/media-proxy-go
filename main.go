@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"git.sda1.net/media-proxy-go/core"
 	"git.sda1.net/media-proxy-go/server"
+	"github.com/pkg/profile"
 	"github.com/valyala/fasthttp"
 	"os"
 	"strconv"
@@ -47,6 +48,7 @@ func lowMemoryMode() bool {
 func main() {
 	core.MsgInfo("Starting media-proxy-go ...")
 	if core.IsDebugMode() {
+		defer profile.Start(profile.MemProfile).Stop()
 		fmt.Println("\u001B[31m@@>>>>> Debug mode is enabled!!! NEVER use this in a production environment!! Debugging endpoints can leak sensitive information!!!!! <<<<<@@\u001B[0m")
 	}
 
