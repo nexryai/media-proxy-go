@@ -5,7 +5,8 @@ go 1.20
 require (
 	github.com/pkg/profile v1.7.0
 	github.com/valyala/fasthttp v1.48.0
-	golang.org/x/image v0.8.0
+	golang.org/x/image v0.9.0
+	gopkg.in/gographics/imagick.v3 v3.4.2
 )
 
 require (
@@ -14,7 +15,4 @@ require (
 	github.com/google/pprof v0.0.0-20211214055906-6f57359322fd // indirect
 	github.com/klauspost/compress v1.16.3 // indirect
 	github.com/valyala/bytebufferpool v1.0.0 // indirect
-	golang.org/x/net v0.11.0 // indirect
-	golang.org/x/text v0.10.0 // indirect
-	gopkg.in/gographics/imagick.v3 v3.4.2 // indirect
 )
