@@ -68,17 +68,23 @@ func fetchImage(url string) (*[]byte, string, error) {
 }
 
 func downloadFile(targetUrl string, maxSize int64) (*http.Response, error) {
-	proxyUrl, err := url.Parse(core.GetProxyConfig())
-	if err != nil {
-		core.MsgWarn("Invalid proxy config. Ignore.")
-	}
+	var client *http.Client
 
-	transport := &http.Transport{
-		Proxy: http.ProxyURL(proxyUrl),
-	}
+	if core.GetProxyConfig() != "" {
+		proxyUrl, err := url.Parse(core.GetProxyConfig())
+		if err != nil {
+			core.MsgWarn("Invalid proxy config. Ignore.")
+		}
 
-	client := &http.Client{
-		Transport: transport,
+		transport := &http.Transport{
+			Proxy: http.ProxyURL(proxyUrl),
+		}
+
+		client = &http.Client{
+			Transport: transport,
+		}
+	} else {
+		client = &http.Client{}
 	}
 
 	// リクエストを作成
