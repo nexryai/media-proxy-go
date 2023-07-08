@@ -31,6 +31,7 @@ func isConvertible(contentType string, fetchedImage *[]byte) bool {
 	}
 }
 
+// アニメーション画像かどうか（convertAndResizeImage()がアニメーション画像としてレンダリングするかどうか決める時に使う）
 func isAnimatedFormat(contentType string, fetchedImage *[]byte) bool {
 	if contentType == "image/webp" {
 		return isAnimatedWebP(fetchedImage)
