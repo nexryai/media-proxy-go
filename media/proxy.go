@@ -64,7 +64,11 @@ func ProxyImage(url string, widthLimit int, heightLimit int, isStatic bool, targ
 
 	if isConvertible(contentType, imageBufferPtr) {
 		core.MsgDebug("Use ImageMagick")
+
+		// isAnimatedがTrueなら1フレームずつ処理する。!isAnimatedでアニメーション画像をプロキシすると最初の1フレームだけ返ってくる
 		img, err := convertAndResizeImage(imageBufferPtr, widthLimit, heightLimit, targetFormat, isAnimated)
+
+		// FIXME: これ要る？
 		imagick.Terminate()
 
 		if err != nil {

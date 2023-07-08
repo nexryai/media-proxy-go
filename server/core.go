@@ -49,6 +49,7 @@ func RequestHandler(ctx *fasthttp.RequestCtx) {
 
 		targetFormat := "webp"
 		if useAvif {
+			// 試験的
 			targetFormat = "avif"
 		}
 
@@ -88,6 +89,7 @@ func RequestHandler(ctx *fasthttp.RequestCtx) {
 		ctx.Response.Header.SetContentType(contentType)
 		ctx.Response.SetBody(*proxiedImage)
 
+		// これ効果なさそう？
 		runtime.GC()
 
 	}

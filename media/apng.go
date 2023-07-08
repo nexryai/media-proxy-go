@@ -19,6 +19,5 @@ func isAnimatedPNG(imageData *[]byte) bool {
 func isAnimatedWebP(imageData *[]byte) bool {
 	// ヘッダーをチェック
 	// Animated WebPの場合、ファイルの0x1Eから0x22がANIMになる
-	isAnimated := string((*imageData)[0x1E:0x22]) == "ANIM"
-	return isAnimated
+	return string((*imageData)[0x1E:0x22]) == "ANIM"
 }
