@@ -43,7 +43,6 @@ func isAnimatedFormat(contentType string, fetchedImage *[]byte) bool {
 	return false
 }
 
-// ToDo 引数を構造体にして綺麗にする
 func ProxyImage(opts *ProxyOpts) (*[]byte, string, error) {
 
 	imageBufferPtr, contentType, err := fetchImage(opts.Url)

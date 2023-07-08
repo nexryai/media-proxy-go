@@ -66,26 +66,19 @@ func RequestHandler(ctx *fasthttp.RequestCtx) {
 			}
 		}()
 
-		var widthLimit int
-		var heightLimit int
+		var widthLimit, heightLimit int
 
-		if isAvatar {
-			// アバター用
-			widthLimit = 320
-			heightLimit = 320
-		} else if isEmoji {
-			// 絵文字用
-			widthLimit = 128
-			heightLimit = 128
-		} else if isPreview {
-			widthLimit = 200
-			heightLimit = 200
-		} else if isBadge {
-			widthLimit = 96
-			heightLimit = 96
-		} else {
-			widthLimit = 3200
-			heightLimit = 3200
+		switch {
+		case isAvatar:
+			widthLimit, heightLimit = 320, 320
+		case isEmoji:
+			widthLimit, heightLimit = 128, 128
+		case isPreview:
+			widthLimit, heightLimit = 200, 200
+		case isBadge:
+			widthLimit, heightLimit = 96, 96
+		default:
+			widthLimit, heightLimit = 3200, 3200
 		}
 
 		options := &media.ProxyOpts{
