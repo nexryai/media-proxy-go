@@ -68,26 +68,8 @@ func fetchImage(url string) (*[]byte, string, error) {
 }
 
 func downloadFile(targetUrl string, maxSize int64) (*http.Response, error) {
-	var client *http.Client
-
-	if core.GetProxyConfig() != "" {
-		proxyUrl, err := url.Parse(core.GetProxyConfig())
-		if err != nil {
-			core.MsgWarn("Invalid proxy config. Ignore.")
-		}
-
-		transport := &http.Transport{
-			Proxy: http.ProxyURL(proxyUrl),
-		}
-
-		client = &http.Client{
-			Transport: transport,
-		}
-	} else {
-		client = &http.Client{}
-	}
-
 	// リクエストを作成
+	client := mkHttpClient()
 	req, err := http.NewRequest("GET", targetUrl, nil)
 	if err != nil {
 		return nil, err
@@ -116,6 +98,28 @@ func downloadFile(targetUrl string, maxSize int64) (*http.Response, error) {
 
 	resp.Body = &limitedReader{rc: resp.Body, n: maxSize}
 	return resp, nil
+}
+
+func mkHttpClient() *http.Client {
+	if core.GetProxyConfig() != "" {
+		core.MsgDebug("Use proxy")
+
+		proxyUrl, err := url.Parse(core.GetProxyConfig())
+		if err != nil {
+			core.MsgWarn("Invalid proxy config. Ignore.")
+		}
+
+		transport := &http.Transport{
+			Proxy: http.ProxyURL(proxyUrl),
+		}
+
+		return &http.Client{
+			Transport: transport,
+		}
+
+	} else {
+		return &http.Client{}
+	}
 }
 
 func (lr *limitedReader) Read(p []byte) (int, error) {
