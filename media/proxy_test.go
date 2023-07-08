@@ -32,5 +32,6 @@ func testProxyImageDecodingFromUrl(t *testing.T, url string, widthLimit int, hei
 
 func TestProxyImageDecoding(t *testing.T) {
 	// 比率チェックも兼ねてる
-	testProxyImageDecodingFromUrl(t, "https://s3.sda1.net/misskey/contents/c45f5574-7bed-458e-b003-2014a13147ff.png", 360, 202, false)
+	testProxyImageDecodingFromUrl(t, "https://s3.sda1.net/misskey/contents/c45f5574-7bed-458e-b003-2014a13147ff.png", 360, 203, false)
+	testProxyImageDecodingFromUrl(t, "https://s3.sda1.net/misskey/contents/94f005bc-1a77-4c57-a72f-43f50cc144ea.png", 1024, 440, false)
 }
