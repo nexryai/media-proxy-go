@@ -9,6 +9,11 @@ import (
 )
 
 func convertAndResizeImage(imageBufferPtr *[]byte, widthLimit int, heightLimit int, targetFormat string, isAnimated bool) (*[]byte, error) {
+
+	if isAnimated {
+		core.MsgDebug("isAnimated: true")
+	}
+
 	// Imagickの初期化
 	imagick.Initialize()
 	defer imagick.Terminate()
@@ -32,7 +37,7 @@ func convertAndResizeImage(imageBufferPtr *[]byte, widthLimit int, heightLimit i
 		return nil, fmt.Errorf("too large image")
 	}
 
-	if width > widthLimit || height > heightLimit {
+	if width > widthLimit || height > heightLimit || isAnimated {
 		// 縦横比率を計算
 		aspectRatio := float64(width) / float64(height)
 

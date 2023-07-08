@@ -7,7 +7,8 @@ import (
 	"gopkg.in/gographics/imagick.v3/imagick"
 )
 
-func isConvertible(contentType string) bool {
+// trueであればImageMagickによって処理される。そうでなければそのままプロキシされる
+func isConvertible(contentType string, fetchedImage *[]byte) bool {
 	switch contentType {
 	case "image/ico":
 		// 現状icoをデコードできないのでfalseを返してデコードせずそのままプロキシするようにする
@@ -17,10 +18,9 @@ func isConvertible(contentType string) bool {
 	case "image/heif":
 		return true
 	case "image/png":
-		return true
+		// apng無理。滅びろ。お前に人権はない。
+		return !isAnimatedPNG(fetchedImage)
 	case "image/webp":
-		return true
-	case "image/avif":
 		return true
 	case "image/gif":
 		return true
@@ -31,26 +31,7 @@ func isConvertible(contentType string) bool {
 	}
 }
 
-func isStaticFormat(contentType string) bool {
-	switch contentType {
-	case "image/ico":
-		return true
-	case "image/jpeg":
-		return true
-	case "image/heif":
-		return true
-	case "image/svg+xml":
-		return true
-	default:
-		// pngはapngがあるのでfalse
-		return false
-	}
-}
-
-func isConvertibleAnimatedFormat(contentType string, fetchedImage *[]byte) bool {
-	if contentType == "image/png" && !isAnimatedPNG(fetchedImage) {
-		return true
-	}
+func isAnimatedFormat(contentType string) bool {
 	if contentType == "image/webp" {
 		return true
 	}
@@ -72,14 +53,14 @@ func ProxyImage(url string, widthLimit int, heightLimit int, isStatic bool, targ
 
 	var isAnimated bool
 
-	if !isStaticFormat(contentType) && isConvertibleAnimatedFormat(contentType, imageBufferPtr) && !isStatic {
+	if isAnimatedFormat(contentType) && !isStatic {
 		core.MsgDebug("Animated image!")
 		isAnimated = true
 	} else {
 		isAnimated = false
 	}
 
-	if isConvertible(contentType) {
+	if isConvertible(contentType, imageBufferPtr) {
 		core.MsgDebug("Use ImageMagick")
 		img, err := convertAndResizeImage(imageBufferPtr, widthLimit, heightLimit, targetFormat, isAnimated)
 		imagick.Terminate()
