@@ -52,6 +52,16 @@ func main() {
 		fmt.Println("\u001B[31m@@>>>>> Debug mode is enabled!!! NEVER use this in a production environment!! Debugging endpoints can leak sensitive information!!!!! <<<<<@@\u001B[0m")
 	}
 
+	mallocTrimThreshold := os.Getenv("MALLOC_TRIM_THRESHOLD_")
+	if mallocTrimThreshold == "" {
+		core.MsgWarn("MALLOC_TRIM_THRESHOLD_ environment variable is not set. It is highly recommended to set MALLOC_TRIM_THRESHOLD_ to 16 or a number close to it.")
+	}
+
+	mallocNmapThreshold := os.Getenv("MALLOC_MMAP_THRESHOLD_")
+	if mallocNmapThreshold == "" {
+		core.MsgWarn("MALLOC_MMAP_THRESHOLD_ environment variable is not set. It is highly recommended to set MALLOC_MMAP_THRESHOLD_ to 16 or a number close to it.")
+	}
+
 	port := getPort()
 	createServer(port)
 }
