@@ -9,6 +9,7 @@ import (
 	_ "image/png"
 	"io"
 	"net/http"
+	"net/url"
 	"strconv"
 )
 
@@ -66,11 +67,22 @@ func fetchImage(url string) (*[]byte, string, error) {
 	return &body, contentType, nil
 }
 
-func downloadFile(url string, maxSize int64) (*http.Response, error) {
-	client := &http.Client{}
+func downloadFile(targetUrl string, maxSize int64) (*http.Response, error) {
+	proxyUrl, err := url.Parse(core.GetProxyConfig())
+	if err != nil {
+		core.MsgWarn("Invalid proxy config. Ignore.")
+	}
+
+	transport := &http.Transport{
+		Proxy: http.ProxyURL(proxyUrl),
+	}
+
+	client := &http.Client{
+		Transport: transport,
+	}
 
 	// リクエストを作成
-	req, err := http.NewRequest("GET", url, nil)
+	req, err := http.NewRequest("GET", targetUrl, nil)
 	if err != nil {
 		return nil, err
 	}

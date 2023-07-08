@@ -17,6 +17,10 @@ func IsDebugMode() bool {
 	return os.Getenv("DEBUG_MODE") == "1"
 }
 
+func GetProxyConfig() string {
+	return os.Getenv("PROXY")
+}
+
 func MsgInfo(text string) {
 	fmt.Println(green + "✔ INFO: " + reset + text)
 }
