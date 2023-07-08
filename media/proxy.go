@@ -44,9 +44,9 @@ func isAnimatedFormat(contentType string, fetchedImage *[]byte) bool {
 }
 
 // ToDo 引数を構造体にして綺麗にする
-func ProxyImage(url string, widthLimit int, heightLimit int, isStatic bool, targetFormat string) (*[]byte, string, error) {
+func ProxyImage(opts *ProxyOpts) (*[]byte, string, error) {
 
-	imageBufferPtr, contentType, err := fetchImage(url)
+	imageBufferPtr, contentType, err := fetchImage(opts.Url)
 	if err != nil {
 		core.MsgErrWithDetail(err, "Failed to download image")
 		return nil, contentType, fmt.Errorf("failed to download image")
@@ -56,7 +56,7 @@ func ProxyImage(url string, widthLimit int, heightLimit int, isStatic bool, targ
 
 	var isAnimated bool
 
-	if isAnimatedFormat(contentType, imageBufferPtr) && !isStatic {
+	if isAnimatedFormat(contentType, imageBufferPtr) && !opts.IsStatic {
 		core.MsgDebug("Animated image!")
 		isAnimated = true
 	} else {
@@ -66,8 +66,16 @@ func ProxyImage(url string, widthLimit int, heightLimit int, isStatic bool, targ
 	if isConvertible(contentType, imageBufferPtr) {
 		core.MsgDebug("Use ImageMagick")
 
+		options := &transcodeImageOpts{
+			imageBufferPtr: imageBufferPtr,
+			widthLimit:     opts.WidthLimit,
+			heightLimit:    opts.HeightLimit,
+			targetFormat:   opts.TargetFormat,
+			isAnimated:     isAnimated,
+		}
+
 		// isAnimatedがTrueなら1フレームずつ処理する。!isAnimatedでアニメーション画像をプロキシすると最初の1フレームだけ返ってくる
-		img, err := convertAndResizeImage(imageBufferPtr, widthLimit, heightLimit, targetFormat, isAnimated)
+		img, err := convertAndResizeImage(options)
 
 		// FIXME: これ要る？
 		imagick.Terminate()
@@ -79,7 +87,7 @@ func ProxyImage(url string, widthLimit int, heightLimit int, isStatic bool, targ
 			core.MsgDebug("Decode ok.")
 		}
 
-		contentType = fmt.Sprintf("image/%s", targetFormat)
+		contentType = fmt.Sprintf("image/%s", opts.TargetFormat)
 
 		return img, contentType, nil
 

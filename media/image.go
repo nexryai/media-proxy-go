@@ -8,10 +8,9 @@ import (
 	"strconv"
 )
 
-// ToDo 引数を構造体でまとめて綺麗にする
-func convertAndResizeImage(imageBufferPtr *[]byte, widthLimit int, heightLimit int, targetFormat string, isAnimated bool) (*[]byte, error) {
+func convertAndResizeImage(opts *transcodeImageOpts) (*[]byte, error) {
 
-	if isAnimated {
+	if opts.isAnimated {
 		core.MsgDebug("isAnimated: true")
 	}
 
@@ -24,7 +23,7 @@ func convertAndResizeImage(imageBufferPtr *[]byte, widthLimit int, heightLimit i
 	defer mw.Destroy()
 
 	// 画像データを読み込む
-	err := mw.ReadImageBlob(*imageBufferPtr)
+	err := mw.ReadImageBlob(*opts.imageBufferPtr)
 	if err != nil {
 		return nil, fmt.Errorf("画像の読み込みに失敗しました: %v", err)
 	}
@@ -45,7 +44,7 @@ func convertAndResizeImage(imageBufferPtr *[]byte, widthLimit int, heightLimit i
 	var newHeight int
 	var shouldResize bool
 
-	if width > widthLimit || height > heightLimit {
+	if width > opts.widthLimit || height > opts.heightLimit {
 		shouldResize = true
 	}
 
@@ -58,29 +57,29 @@ func convertAndResizeImage(imageBufferPtr *[]byte, widthLimit int, heightLimit i
 		newHeight = height
 
 		// 超過量を算出
-		widthExcess := width - widthLimit
-		heightExcess := height - heightLimit
+		widthExcess := width - opts.widthLimit
+		heightExcess := height - opts.heightLimit
 
 		// widthLimitとheightLimitが両方超過してる場合、超過している部分が少ない方のlimitは0にして比率を維持する
-		if widthLimit != 0 && heightLimit != 0 {
-			if width > widthLimit && height > heightLimit {
+		if opts.widthLimit != 0 && opts.heightLimit != 0 {
+			if width > opts.widthLimit && height > opts.heightLimit {
 				if widthExcess < heightExcess {
-					widthLimit = 0
+					opts.widthLimit = 0
 				} else {
-					heightLimit = 0
+					opts.heightLimit = 0
 				}
 			}
 		}
 
 		// ChatGPTが考えてくれた
-		if widthLimit != 0 {
-			if width > widthLimit {
-				newWidth = widthLimit
+		if opts.widthLimit != 0 {
+			if width > opts.widthLimit {
+				newWidth = opts.widthLimit
 				newHeight = int(math.Round(float64(newWidth) / aspectRatio))
 			}
-		} else if heightLimit != 0 {
-			if height > heightLimit {
-				newHeight = heightLimit
+		} else if opts.heightLimit != 0 {
+			if height > opts.heightLimit {
+				newHeight = opts.heightLimit
 				newWidth = int(math.Round(float64(newHeight) * aspectRatio))
 			}
 		}
@@ -88,7 +87,7 @@ func convertAndResizeImage(imageBufferPtr *[]byte, widthLimit int, heightLimit i
 		core.MsgDebug(fmt.Sprintf("newWidth: %d newHeight: %d aspectRatio: %v", newWidth, newHeight, aspectRatio))
 	}
 
-	if isAnimated {
+	if opts.isAnimated {
 		core.MsgDebug("Encode as animated image!")
 
 		aw := mw.CoalesceImages()
@@ -120,7 +119,7 @@ func convertAndResizeImage(imageBufferPtr *[]byte, widthLimit int, heightLimit i
 		mw.SetOption("webp:lossless", "false")
 		//mw.SetOption("webp:method", "6")
 		//mw.SetOption("webp:alpha-quality", "80")
-		mw.SetFormat(targetFormat)
+		mw.SetFormat(opts.targetFormat)
 		mw.SetIteratorIndex(0)
 
 		// 変換後の画像データを取得
@@ -152,7 +151,7 @@ func convertAndResizeImage(imageBufferPtr *[]byte, widthLimit int, heightLimit i
 	mw.SetOption("webp:lossless", "false")
 	//mw.SetOption("webp:method", "6")
 	//mw.SetOption("webp:alpha-quality", "80")
-	mw.SetFormat(targetFormat)
+	mw.SetFormat(opts.targetFormat)
 
 	// 変換後の画像データを取得
 	convertedData := mw.GetImageBlob()

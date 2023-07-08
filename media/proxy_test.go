@@ -8,8 +8,16 @@ import (
 
 func testProxyImageDecodingFromUrl(t *testing.T, url string, widthLimit int, heightLimit int, isStatic bool) {
 
+	options := &ProxyOpts{
+		Url:          url,
+		WidthLimit:   widthLimit,
+		HeightLimit:  heightLimit,
+		IsStatic:     isStatic,
+		TargetFormat: "webp",
+	}
+
 	// ProxyImage関数の呼び出し
-	imageBytes, _, _ := ProxyImage(url, widthLimit, heightLimit, isStatic, "webp")
+	imageBytes, _, _ := ProxyImage(options)
 	if imageBytes == nil {
 		t.Fatal("Failed to fetch and encode image")
 	}
