@@ -3,14 +3,14 @@ WORKDIR /build
 
 COPY . ./
 
-RUN apk add imagemagick-dev \
+RUN apk add build-base imagemagick imagemagick-libs imagemagick-dev \
  && go build -ldflags="-s -w" -trimpath -o mediaproxy main.go
 
 FROM alpine:3.18
 
 COPY --from=builder /build/mediaproxy /app/mediaproxy
 
-RUN apk add tini imagemagick-libs --no-cache \
+RUN apk add ca-certificates tini imagemagick-libs --no-cache \
  && addgroup -g 909 app \
  && adduser -D -h /app -s /bin/sh -u 909 -G app app \
  && chown -R app:app /app \
