@@ -18,7 +18,7 @@ type limitedReader struct {
 	n  int64
 }
 
-// URLを取得して、リーダーを返す
+// URLを取得して、バッファーのポインタを返す
 func fetchImage(url string) (*[]byte, string, error) {
 	core.MsgDebug(fmt.Sprintf("Download image: %s", url))
 
@@ -61,12 +61,10 @@ func fetchImage(url string) (*[]byte, string, error) {
 		core.MsgDebug("Request OK.")
 	}
 
-	// bodyをbytes.Readerに変換して返す
-	//imageReader := bytes.NewReader(body)
-
 	return &body, contentType, nil
 }
 
+// サイズ制限付きダウンローダー
 func downloadFile(targetUrl string, maxSize int64) (*http.Response, error) {
 	// リクエストを作成
 	client := mkHttpClient()
@@ -100,6 +98,7 @@ func downloadFile(targetUrl string, maxSize int64) (*http.Response, error) {
 	return resp, nil
 }
 
+// プロキシ設定に応じていい感じのhttp.Clientを生成する
 func mkHttpClient() *http.Client {
 	if core.GetProxyConfig() != "" {
 		core.MsgDebug("Use proxy")
