@@ -1,19 +1,18 @@
-FROM golang:1.20-bookworm as builder
+FROM golang:1.20-alpine3.18 as builder
 WORKDIR /build
 
 COPY . ./
 
-RUN apt update && apt -y install libwebp-dev \
+RUN apk add imagemagick-dev \
  && go build -ldflags="-s -w" -trimpath -o mediaproxy main.go
 
-FROM debian:bookworm-slim
+FROM alpine:3.18
 
 COPY --from=builder /build/mediaproxy /app/mediaproxy
 
-RUN apt update \
- && apt install -y tini ca-certificates openssl libwebp7 \
- && groupadd -g "991" app \
- && useradd -l -u "991" -g "991" -m -d /app app \
+RUN apk add tini imagemagick-libs --no-cache \
+ && addgroup -g 909 app \
+ && adduser -D -h /app -s /bin/sh -u 909 -G app app \
  && chown -R app:app /app \
  && chmod +x /app/mediaproxy \
  && chmod -R 777 /app
