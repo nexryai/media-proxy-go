@@ -27,6 +27,7 @@ func isConvertible(contentType string, fetchedImage *[]byte) bool {
 	case "image/svg+xml":
 		return true
 	default:
+		// AVIFは敢えて無変換でプロキシする（サイズがwebpより小さくEdgeユーザーの存在を無視すれば変換する意義がほぼない）
 		return false
 	}
 }
@@ -79,7 +80,6 @@ func ProxyImage(url string, widthLimit int, heightLimit int, isStatic bool, targ
 
 	} else if security.IsFileTypeBrowserSafe(contentType) {
 		// どれにも当てはまらないかつブラウザセーフな形式ならそのままプロキシ
-		// AVIFは敢えて無変換でプロキシする（サイズがwebpより小さくEdgeユーザーの存在を無視すれば変換する意義がほぼない）
 		core.MsgDebug("Proxy image without transcode")
 		return imageBufferPtr, contentType, nil
 
