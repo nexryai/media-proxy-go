@@ -86,5 +86,5 @@ func ProxyImage(url string, widthLimit int, heightLimit int, isStatic bool, targ
 	}
 
 	//どれにも当てはまらないならnilを返してクライアントに400を返す
-	return nil, contentType, nil
+	return nil, contentType, fmt.Errorf("invalid file format")
 }
