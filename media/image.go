@@ -8,6 +8,7 @@ import (
 	"strconv"
 )
 
+// ToDo 引数を構造体でまとめて綺麗にする
 func convertAndResizeImage(imageBufferPtr *[]byte, widthLimit int, heightLimit int, targetFormat string, isAnimated bool) (*[]byte, error) {
 
 	if isAnimated {
