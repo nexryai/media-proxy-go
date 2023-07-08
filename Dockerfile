@@ -1,18 +1,18 @@
-FROM golang:1.20-alpine3.18 as builder
+FROM fedora:38 as builder
 WORKDIR /build
 
 COPY . ./
 
-RUN apk add build-base imagemagick imagemagick-libs imagemagick-dev \
+RUN dnf update -y && dnf install -y golang ImageMagick-devel \
  && go build -ldflags="-s -w" -trimpath -o mediaproxy main.go
 
-FROM alpine:3.18
+FROM fedora:38
 
 COPY --from=builder /build/mediaproxy /app/mediaproxy
 
-RUN apk add ca-certificates tini imagemagick-libs --no-cache \
- && addgroup -g 909 app \
- && adduser -D -h /app -s /bin/sh -u 909 -G app app \
+RUN dnf update -y && dnf install -y tini ImageMagick-libs \
+ && groupadd -g 981 app \
+ && useradd -d /app -s /bin/sh -u 981 -g app app \
  && chown -R app:app /app \
  && chmod +x /app/mediaproxy \
  && chmod -R 777 /app
