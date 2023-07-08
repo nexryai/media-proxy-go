@@ -31,9 +31,9 @@ func isConvertible(contentType string, fetchedImage *[]byte) bool {
 	}
 }
 
-func isAnimatedFormat(contentType string) bool {
+func isAnimatedFormat(contentType string, fetchedImage *[]byte) bool {
 	if contentType == "image/webp" {
-		return true
+		return isAnimatedWebP(fetchedImage)
 	}
 	if contentType == "image/gif" {
 		return true
@@ -53,7 +53,7 @@ func ProxyImage(url string, widthLimit int, heightLimit int, isStatic bool, targ
 
 	var isAnimated bool
 
-	if isAnimatedFormat(contentType) && !isStatic {
+	if isAnimatedFormat(contentType, imageBufferPtr) && !isStatic {
 		core.MsgDebug("Animated image!")
 		isAnimated = true
 	} else {
