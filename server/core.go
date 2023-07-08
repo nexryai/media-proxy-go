@@ -68,10 +68,10 @@ func RequestHandler(ctx *fasthttp.RequestCtx) {
 
 		if isAvatar {
 			// アバター用
-			proxiedImage, contentType, err = media.ProxyImage(url, 0, 320, isStatic, targetFormat)
+			proxiedImage, contentType, err = media.ProxyImage(url, 320, 320, isStatic, targetFormat)
 		} else if isEmoji {
 			// 絵文字用
-			proxiedImage, contentType, err = media.ProxyImage(url, 0, 128, isStatic, targetFormat)
+			proxiedImage, contentType, err = media.ProxyImage(url, 128, 128, isStatic, targetFormat)
 		} else if isPreview {
 			proxiedImage, contentType, err = media.ProxyImage(url, 200, 200, isStatic, targetFormat)
 		} else if isBadge {

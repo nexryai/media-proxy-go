@@ -33,17 +33,28 @@ func convertAndResizeImage(imageBufferPtr *[]byte, widthLimit int, heightLimit i
 	height := int(mw.GetImageHeight())
 	delay := mw.GetImageDelay()
 
+	core.MsgDebug(fmt.Sprintf("w: %d h: %d, delay: %d", width, height, delay))
+
 	if width > 5120 || height > 5120 {
 		return nil, fmt.Errorf("too large image")
 	}
 
-	if width > widthLimit || height > heightLimit || isAnimated {
+	// リサイズ系処理
+	var newWidth int
+	var newHeight int
+	var shouldResize bool
+
+	if width > widthLimit || height > heightLimit {
+		shouldResize = true
+	}
+
+	if shouldResize {
 		// 縦横比率を計算
 		aspectRatio := float64(width) / float64(height)
 
 		// リサイズ後のサイズを計算
-		newWidth := width
-		newHeight := height
+		newWidth = width
+		newHeight = height
 
 		// 超過量を算出
 		widthExcess := width - widthLimit
@@ -73,66 +84,71 @@ func convertAndResizeImage(imageBufferPtr *[]byte, widthLimit int, heightLimit i
 			}
 		}
 
-		if isAnimated {
-			core.MsgDebug("Encode as animated image!")
+		core.MsgDebug(fmt.Sprintf("newWidth: %d newHeight: %d aspectRatio: %v", newWidth, newHeight, aspectRatio))
+	}
 
-			aw := mw.CoalesceImages()
-			mw.Destroy()
-			defer aw.Destroy()
+	if isAnimated {
+		core.MsgDebug("Encode as animated image!")
 
-			// 新世界を創造する
-			mw = imagick.NewMagickWand()
-			mw.SetImageDelay(delay)
-			defer mw.Destroy()
+		aw := mw.CoalesceImages()
+		mw.Destroy()
+		defer aw.Destroy()
 
-			for i := 0; i < int(aw.GetNumberImages()); i++ {
-				core.MsgDebug("Encode animated image frame: " + strconv.Itoa(i))
-				aw.SetIteratorIndex(i)
-				img := aw.GetImage()
+		// 新世界を創造する
+		mw = imagick.NewMagickWand()
+		mw.SetImageDelay(delay)
+		defer mw.Destroy()
+
+		for i := 0; i < int(aw.GetNumberImages()); i++ {
+			core.MsgDebug("Encode animated image frame: " + strconv.Itoa(i))
+			aw.SetIteratorIndex(i)
+			img := aw.GetImage()
+			if shouldResize {
 				img.ResizeImage(uint(newWidth), uint(newHeight), imagick.FILTER_LANCZOS)
-				mw.AddImage(img)
-				img.Destroy()
 			}
+			mw.AddImage(img)
+			img.Destroy()
+		}
 
-			aw.Destroy()
+		aw.Destroy()
 
-			// WebP形式に変換
-			mw.ResetIterator()
+		// WebP形式に変換
+		mw.ResetIterator()
 
-			// ToDo: この辺調整する
-			//mw.SetOption("webp:lossless", "false")
-			//mw.SetOption("webp:method", "6")
-			//mw.SetOption("webp:alpha-quality", "80")
-			mw.SetFormat(targetFormat)
-			mw.SetIteratorIndex(0)
+		// ToDo: この辺調整する
+		mw.SetOption("webp:lossless", "false")
+		//mw.SetOption("webp:method", "6")
+		//mw.SetOption("webp:alpha-quality", "80")
+		mw.SetFormat(targetFormat)
+		mw.SetIteratorIndex(0)
 
-			// 変換後の画像データを取得
-			convertedData := mw.GetImagesBlob()
+		// 変換後の画像データを取得
+		convertedData := mw.GetImagesBlob()
 
-			mw.Destroy()
+		mw.Destroy()
 
-			// なぜかこれ永遠に終わらん
-			//imagick.Terminate()
+		// なぜかこれ永遠に終わらん
+		//imagick.Terminate()
 
-			return &convertedData, nil
+		return &convertedData, nil
 
-		} else {
-			core.MsgDebug("Encode as static image!")
+	} else {
+		core.MsgDebug("Encode as static image!")
 
-			// 画像をリサイズ
+		// 画像をリサイズ
+		if shouldResize {
 			err = mw.ResizeImage(uint(newWidth), uint(newHeight), imagick.FILTER_LANCZOS)
 			if err != nil {
 				return nil, fmt.Errorf("画像のリサイズに失敗しました: %v", err)
 			}
 		}
-
 	}
 
 	// WebP形式に変換
 	mw.ResetIterator()
 
 	// ToDo: この辺調整する
-	//mw.SetOption("webp:lossless", "false")
+	mw.SetOption("webp:lossless", "false")
 	//mw.SetOption("webp:method", "6")
 	//mw.SetOption("webp:alpha-quality", "80")
 	mw.SetFormat(targetFormat)
