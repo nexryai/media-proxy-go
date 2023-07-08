@@ -15,7 +15,7 @@ jobs:
       - uses: actions/checkout@v3
 
       - name: Install build dependency
-        run: sudo dnf update && sudo dnf install -y golang ImageMagick-devel
+        run: sudo dnf update -y && sudo dnf install -y golang ImageMagick-devel
 
       - name: Run Tests
         run: go test ./...
