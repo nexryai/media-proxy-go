@@ -6,7 +6,7 @@ require (
 	github.com/pkg/profile v1.7.0
 	github.com/valyala/fasthttp v1.48.0
 	golang.org/x/image v0.9.0
-	gopkg.in/gographics/imagick.v3 v3.4.2
+	gopkg.in/gographics/imagick.v3 v3.4.3
 )
 
 require (
