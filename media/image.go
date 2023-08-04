@@ -8,11 +8,19 @@ import (
 	"strconv"
 )
 
+func isTooBogFile(d *[]byte) bool {
+	// 2MB以上ならTrue
+	return len(*d) >= 2*1024*1024
+}
+
 func convertAndResizeImage(opts *transcodeImageOpts) (*[]byte, error) {
 
 	if opts.isAnimated {
 		core.MsgDebug("isAnimated: true")
 	}
+
+	// メモリ使用量が97.5%以上なら処理を中断
+	core.RaisePanicOnHighMemoryUsage(97.5)
 
 	// Imagickの初期化
 	imagick.Initialize()
@@ -90,47 +98,75 @@ func convertAndResizeImage(opts *transcodeImageOpts) (*[]byte, error) {
 	if opts.isAnimated {
 		core.MsgDebug("Encode as animated image!")
 
-		aw := mw.CoalesceImages()
-		mw.Destroy()
-		defer aw.Destroy()
-
-		// 新世界を創造する
-		mw = imagick.NewMagickWand()
-		mw.SetImageDelay(delay)
-		defer mw.Destroy()
-
-		for i := 0; i < int(aw.GetNumberImages()); i++ {
-			core.MsgDebug("Encode animated image frame: " + strconv.Itoa(i))
-			aw.SetIteratorIndex(i)
-			img := aw.GetImage()
-			if shouldResize {
-				img.ResizeImage(uint(newWidth), uint(newHeight), imagick.FILTER_LANCZOS)
+		if opts.originalFormat == "image/gif" {
+			opts := ffmpegOpts{
+				imageBufferPtr: opts.imageBufferPtr,
+				shouldResize:   shouldResize,
+				width:          newWidth,
+				height:         newHeight,
+				// 本当はlibsvtav1でavifにしたいがavifをパイプ出力できないため無理
+				encoder:      "webp",
+				targetFormat: "webp",
 			}
-			mw.AddImage(img)
-			img.Destroy()
+
+			converted, err := convertToAnimatedWebP(&opts)
+
+			if err != nil {
+				core.MsgErrWithDetail(err, "Failed to convert an animated image with ffmpeg!")
+				return nil, err
+			} else {
+				return converted, nil
+			}
+
+		} else if opts.originalFormat == "image/webp" && !isTooBogFile(opts.imageBufferPtr) {
+
+			// これメモリ効率が死ぬほど悪い
+			aw := mw.CoalesceImages()
+			mw.Destroy()
+			defer aw.Destroy()
+
+			// 新世界を創造する
+			mw = imagick.NewMagickWand()
+			mw.SetImageDelay(delay)
+			defer mw.Destroy()
+
+			for i := 0; i < int(aw.GetNumberImages()); i++ {
+				core.MsgDebug("Encode animated image frame: " + strconv.Itoa(i))
+
+				// メモリ使用量が90%以上ならpanicを発生させて処理を強制的に中断させてOOMを回避する
+				core.RaisePanicOnHighMemoryUsage(90.0)
+
+				aw.SetIteratorIndex(i)
+				img := aw.GetImage()
+				if shouldResize {
+					img.ResizeImage(uint(newWidth), uint(newHeight), imagick.FILTER_LANCZOS)
+				}
+				mw.AddImage(img)
+				img.Destroy()
+			}
+
+			aw.Destroy()
+
+			// WebP形式に変換
+			mw.ResetIterator()
+
+			// ToDo: この辺調整する
+			mw.SetOption("webp:lossless", "false")
+			//mw.SetOption("webp:method", "6")
+			//mw.SetOption("webp:alpha-quality", "80")
+			mw.SetFormat(opts.targetFormat)
+			mw.SetIteratorIndex(0)
+
+			// 変換後の画像データを取得
+			convertedData := mw.GetImagesBlob()
+
+			mw.Destroy()
+
+			// なぜかこれ永遠に終わらん
+			//imagick.Terminate()
+
+			return &convertedData, nil
 		}
-
-		aw.Destroy()
-
-		// WebP形式に変換
-		mw.ResetIterator()
-
-		// ToDo: この辺調整する
-		mw.SetOption("webp:lossless", "false")
-		//mw.SetOption("webp:method", "6")
-		//mw.SetOption("webp:alpha-quality", "80")
-		mw.SetFormat(opts.targetFormat)
-		mw.SetIteratorIndex(0)
-
-		// 変換後の画像データを取得
-		convertedData := mw.GetImagesBlob()
-
-		mw.Destroy()
-
-		// なぜかこれ永遠に終わらん
-		//imagick.Terminate()
-
-		return &convertedData, nil
 
 	} else {
 		core.MsgDebug("Encode as static image!")

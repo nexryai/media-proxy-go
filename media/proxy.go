@@ -69,6 +69,7 @@ func ProxyImage(opts *ProxyOpts) (*[]byte, string, error) {
 			imageBufferPtr: imageBufferPtr,
 			widthLimit:     opts.WidthLimit,
 			heightLimit:    opts.HeightLimit,
+			originalFormat: contentType,
 			targetFormat:   opts.TargetFormat,
 			isAnimated:     isAnimated,
 		}

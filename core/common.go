@@ -3,6 +3,7 @@ package core
 import (
 	"fmt"
 	"os"
+	"runtime"
 	"strconv"
 	"time"
 )
@@ -66,4 +67,18 @@ func GetUnixTimestampString() string {
 	now := time.Now()
 	unix := now.Unix()
 	return strconv.FormatInt(unix, 10)
+}
+
+func RaisePanicOnHighMemoryUsage(threshold float64) {
+	var memStats runtime.MemStats
+	runtime.ReadMemStats(&memStats)
+
+	// Calculate memory usage percentage
+	usedMemory := float64(memStats.Alloc)
+	totalMemory := float64(memStats.Sys)
+	memoryUsage := (usedMemory / totalMemory) * 100
+
+	if memoryUsage >= threshold {
+		panic(fmt.Errorf("Memory usage exceeded %.2f%% threshold", threshold))
+	}
 }

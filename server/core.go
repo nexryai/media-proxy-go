@@ -63,6 +63,7 @@ func RequestHandler(ctx *fasthttp.RequestCtx) {
 				// パニックが発生した場合、エラーレスポンスを返す
 				core.MsgErr(fmt.Sprintf("Panic occurred while proxying media: %s", r.(error)))
 				ctx.Error("Internal Server Error", fasthttp.StatusInternalServerError)
+				return
 			}
 		}()
 
