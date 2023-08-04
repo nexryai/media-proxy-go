@@ -19,7 +19,12 @@ jobs:
       - uses: actions/checkout@v3
 
       - name: Install build dependency
-        run: sudo dnf update -y && sudo dnf install -y golang ImageMagick-devel
+        run: |
+          sudo dnf -y install https://download1.rpmfusion.org/free/fedora/rpmfusion-free-release-$(rpm -E %fedora).noarch.rpm
+          sudo dnf -y install https://download1.rpmfusion.org/nonfree/fedora/rpmfusion-nonfree-release-$(rpm -E %fedora).noarch.rpm
+          sudo dnf update -y
+          sudo dnf -y install ffmpeg --allowerasing
+          sudo dnf -y install golang ImageMagick-devel
 
       - name: Run Tests
         run: go test ./...
