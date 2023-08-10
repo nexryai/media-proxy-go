@@ -128,6 +128,23 @@ func convertAndResizeImage(opts *transcodeImageOpts) (*[]byte, error) {
 			}
 		}
 
+		// 実験的
+		if opts.targetFormat == "avif" {
+			// WebP形式に変換
+			encodeOpts := vips.AvifExportParams{
+				Quality:  70,
+				Lossless: false,
+			}
+
+			// 変換後の画像データを取得
+			convertedData, _, err := image.ExportAvif(&encodeOpts)
+			if err != nil {
+				return nil, err
+			}
+
+			return &convertedData, nil
+		}
+
 		// WebP形式に変換
 		encodeOpts := vips.WebpExportParams{
 			Quality:  70,
