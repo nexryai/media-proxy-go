@@ -19,6 +19,7 @@ jobs:
 
       - name: Install build dependency
         run: |
+          sudo apt update
           sudo apt install -y golang libvips libvips-dev libde265-0 libde265-dev
 
       - name: Run Tests
