@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"git.sda1.net/media-proxy-go/core"
 	"git.sda1.net/media-proxy-go/security"
-	"gopkg.in/gographics/imagick.v3/imagick"
 )
 
 // trueであればImageMagickによって処理される。そうでなければそのままプロキシされる
@@ -76,9 +75,6 @@ func ProxyImage(opts *ProxyOpts) (*[]byte, string, error) {
 
 		// isAnimatedがTrueなら1フレームずつ処理する。!isAnimatedでアニメーション画像をプロキシすると最初の1フレームだけ返ってくる
 		img, err := convertAndResizeImage(options)
-
-		// FIXME: これ要る？
-		imagick.Terminate()
 
 		if err != nil {
 			core.MsgWarn(fmt.Sprintf("Failed to decode image: %v", err))

@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"git.sda1.net/media-proxy-go/core"
 	"git.sda1.net/media-proxy-go/server"
-	"github.com/pkg/profile"
+	"github.com/davidbyttow/govips/v2/vips"
 	"github.com/valyala/fasthttp"
 	"os"
 	"strconv"
@@ -48,7 +48,6 @@ func lowMemoryMode() bool {
 func main() {
 	core.MsgInfo("Starting media-proxy-go ...")
 	if core.IsDebugMode() {
-		defer profile.Start(profile.MemProfile).Stop()
 		fmt.Println("\u001B[31m@@>>>>> Debug mode is enabled!!! NEVER use this in a production environment!! Debugging endpoints can leak sensitive information!!!!! <<<<<@@\u001B[0m")
 	}
 
@@ -61,6 +60,10 @@ func main() {
 	if mallocNmapThreshold == "" {
 		core.MsgWarn("MALLOC_MMAP_THRESHOLD_ environment variable is not set. It is highly recommended to set MALLOC_MMAP_THRESHOLD_ to 16 or a number close to it.")
 	}
+
+	// vipsの初期化
+	vips.Startup(nil)
+	defer vips.Shutdown()
 
 	port := getPort()
 	createServer(port)
