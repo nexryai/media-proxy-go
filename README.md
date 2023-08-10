@@ -4,10 +4,10 @@
 MisskeyのMediaProxyとして使える、Goで書かれた軽量なMediaProxy
 
 ### 依存関係
- - libmagickwand-7
+ - libvips
 
 #### ビルド依存関係
- - libmagickwand-7-dev
+ - libvips-dev
  - Go (**バージョン1.18以上**)
 
    
