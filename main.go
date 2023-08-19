@@ -37,14 +37,6 @@ func getPort() int {
 
 }
 
-func lowMemoryMode() bool {
-	if os.Getenv("LOW_MEMORY_MODE") == "1" {
-		return true
-	} else {
-		return false
-	}
-}
-
 func main() {
 	core.MsgInfo("Starting media-proxy-go ...")
 	if core.IsDebugMode() {
