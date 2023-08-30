@@ -47,7 +47,7 @@ func TestProxyImageDecoding(t *testing.T) {
 
 func TestAnimatedImageProxy(t *testing.T) {
 	options := &ProxyOpts{
-		Url:          "https://s3.sda1.net/smelt/contents/0ccee637-0fdf-4def-9b5c-fb9a34a4260c.gif",
+		Url:          "https://www.easygifanimator.net/images/samples/video-to-gif-sample.gif",
 		WidthLimit:   80,
 		HeightLimit:  80,
 		IsStatic:     false,
