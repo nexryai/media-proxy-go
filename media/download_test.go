@@ -38,14 +38,14 @@ func testFetchImageFromUrl(t *testing.T, url string, expectedContentType string)
 
 func TestFetchImage(t *testing.T) {
 	// pngデコードテスト
-	testFetchImageFromUrl(t, "https://s3.sda1.net/misskey/contents/a862bd19-bc1b-4035-a527-f48b2dcea0f5.png", "image/png")
+	testFetchImageFromUrl(t, "https://s3.sda1.net/firefish/contents/741748a6-3185-4b19-99d7-b704e16aecbc.png", "image/png")
 
 	// jpeg
 	testFetchImageFromUrl(t, "https://upload.wikimedia.org/wikipedia/en/a/a9/Example.jpg", "image/jpeg")
 }
 
 func TestDownloadFile(t *testing.T) {
-	_, err := downloadFile("https://s3.sda1.net/misskey/contents/81f19d7f-e4f6-47a0-a043-a07d6cb2dd99.png", 30)
+	_, err := downloadFile("https://s3.sda1.net/firefish/contents/741748a6-3185-4b19-99d7-b704e16aecbc.png", 30)
 	if err == nil {
 		t.Errorf("File size limit not working!!!")
 	}
