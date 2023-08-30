@@ -98,6 +98,7 @@ func RequestHandler(ctx *fasthttp.RequestCtx) {
 		}
 
 		ctx.Response.Header.SetContentType(contentType)
+		ctx.Response.Header.Set("Cache-Control", "public, max-age=432000")
 		ctx.Response.SetBody(*proxiedImage)
 
 		// これ効果なさそう？
