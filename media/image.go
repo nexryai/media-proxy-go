@@ -37,7 +37,7 @@ func convertAndResizeImage(opts *transcodeImageOpts) (*[]byte, error) {
 	height := image.Height()
 	core.MsgDebug(fmt.Sprintf("w: %d h: %d", width, height))
 
-	if width > 5120 || height > 5120 {
+	if !opts.isAnimated && (width > 5120 || height > 5120) {
 		return nil, fmt.Errorf("too large image")
 	}
 
