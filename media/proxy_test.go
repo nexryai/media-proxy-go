@@ -6,12 +6,12 @@ import (
 	"testing"
 )
 
-func testProxyImageDecodingFromUrl(t *testing.T, url string, widthLimit int, heightLimit int, isStatic bool) {
+func testProxyImageDecodingFromUrl(t *testing.T, url string, widthLimit int, expectedHeight int, isStatic bool) {
 
 	options := &ProxyOpts{
 		Url:          url,
 		WidthLimit:   widthLimit,
-		HeightLimit:  heightLimit,
+		HeightLimit:  expectedHeight,
 		IsStatic:     isStatic,
 		TargetFormat: "webp",
 	}
@@ -33,8 +33,11 @@ func testProxyImageDecodingFromUrl(t *testing.T, url string, widthLimit int, hei
 	imgHeight := bounds.Dy()
 
 	// デコードされた画像のサイズチェック
-	if imgWidth > widthLimit || imgHeight > heightLimit {
-		t.Errorf("Decoded image size exceeds the limits: width: %d, height: %d", img.Bounds().Dx(), img.Bounds().Dy())
+	if imgHeight != expectedHeight {
+		t.Errorf("Decoded image height not corrent: expectedHeight: %d, height: %d", expectedHeight, imgHeight)
+	}
+	if imgWidth > widthLimit {
+		t.Errorf("Decoded image size exceeds the limits: width: %d, height: %d", imgWidth, imgHeight)
 	}
 }
 
@@ -42,7 +45,8 @@ func TestProxyImageDecoding(t *testing.T) {
 	// 比率チェックも兼ねてる
 	testProxyImageDecodingFromUrl(t, "https://s3.sda1.net/firefish/contents/5dbff670-9539-496e-b625-97c59ff7804b.png", 360, 203, false)
 	testProxyImageDecodingFromUrl(t, "https://s3.sda1.net/firefish/contents/4525b647-e47f-4fe7-b6d8-77de1fdfb102.png", 1024, 576, false)
-	testProxyImageDecodingFromUrl(t, "https://s3.sda1.net/smelt/contents/bf911d10-9faa-4e8c-b6b2-9d0021355f16.jpg", 800, 700, false)
+	testProxyImageDecodingFromUrl(t, "https://s3.sda1.net/smelt/contents/bf911d10-9faa-4e8c-b6b2-9d0021355f16.jpg", 800, 342, false)
+	testProxyImageDecodingFromUrl(t, "https://s3.sda1.net/firefish/contents/7afe76e0-7d6f-4827-bc72-7c9d613aa7b9.jpg", 1280, 1280, false)
 }
 
 func TestAnimatedImageProxy(t *testing.T) {
