@@ -25,7 +25,6 @@ func convertAndResizeImage(opts *transcodeImageOpts) (*[]byte, error) {
 	core.RaisePanicOnHighMemoryUsage(97.5)
 
 	// バッファーから読み込み
-
 	if err != nil {
 		return nil, fmt.Errorf("failed to load image: %v", err)
 	}
@@ -33,11 +32,25 @@ func convertAndResizeImage(opts *transcodeImageOpts) (*[]byte, error) {
 	defer image.Close()
 
 	// 画像サイズを取得
-	width := image.Width()
-	height := image.Height()
+	var width int
+	var height int
+
+	if opts.isAnimated {
+		numFrames := image.Pages()
+		core.MsgDebug(fmt.Sprintf("frames: %d", numFrames))
+
+		width = image.Width()
+		// vipsにアニメーション画像を読ませると全部のフレームの合計が高さとして認識されるのでフレーム数で割る
+		height = image.Height() / numFrames
+
+	} else {
+		width = image.Width()
+		height = image.Height()
+	}
+
 	core.MsgDebug(fmt.Sprintf("w: %d h: %d", width, height))
 
-	if !opts.isAnimated && (width > 5120 || height > 5120) {
+	if width > 5120 || height > 5120 {
 		return nil, fmt.Errorf("too large image")
 	}
 
@@ -53,17 +66,13 @@ func convertAndResizeImage(opts *transcodeImageOpts) (*[]byte, error) {
 		core.MsgDebug("Encode as animated image!")
 
 		// リサイズ系処理（animated）
-		var newWidth int
-		var newHeight int
+		newWidth := width
+		newHeight := height
 
 		if shouldResize {
 
 			// 縦横比率を計算
 			aspectRatio := float64(width) / float64(height)
-
-			// リサイズ後のサイズを計算
-			newWidth = width
-			newHeight = height
 
 			// 超過量を算出
 			widthExcess := width - opts.widthLimit
