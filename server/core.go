@@ -95,6 +95,7 @@ func RequestHandler(ctx *fasthttp.RequestCtx) {
 			HeightLimit:  heightLimit,
 			IsStatic:     isStatic,
 			TargetFormat: targetFormat,
+			IsEmoji:      isEmoji,
 		}
 
 		proxiedImage, contentType, err = media.ProxyImage(options)

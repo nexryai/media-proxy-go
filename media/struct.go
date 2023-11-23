@@ -5,6 +5,7 @@ type ProxyOpts struct {
 	WidthLimit   int
 	HeightLimit  int
 	IsStatic     bool
+	IsEmoji      bool
 	TargetFormat string
 }
 

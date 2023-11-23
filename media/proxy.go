@@ -74,7 +74,8 @@ func ProxyImage(opts *ProxyOpts) (*[]byte, string, error) {
 			isAnimated:     isAnimated,
 		}
 
-		if os.Getenv("USE_FFMPEG") == "1" {
+		// なんかffmpegだと透過画像を正しく扱えないことが多い
+		if os.Getenv("USE_FFMPEG") == "1" && !opts.IsEmoji {
 			encodeOpts.useLibsvtav1ForAvif = true
 			encodeOpts.targetFormat = "avif"
 		}
