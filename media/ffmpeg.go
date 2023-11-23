@@ -23,6 +23,9 @@ func convertWithFfmpeg(opts *ffmpegOpts) (*[]byte, error) {
 	if opts.height%2 != 0 {
 		opts.height -= 1
 		opts.shouldResize = true
+	} else if opts.width%2 != 0 {
+		// オプションに奇数を指定しなくても元画像の幅が奇数かつリサイズ無しでプロキシしようとするとエラーになるっぽい
+		opts.shouldResize = true
 	}
 
 	if opts.shouldResize {
