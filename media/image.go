@@ -54,6 +54,11 @@ func convertAndResizeImage(opts *transcodeImageOpts) (*[]byte, error) {
 		return nil, fmt.Errorf("too large image")
 	}
 
+	// 現状svtav1は縦か横が最低でも64pxないとエラーになる
+	if width < 64 || height < 64 {
+		opts.useLibsvtav1ForAvif = false
+	}
+
 	// リサイズ系処理
 	var scale float64
 	var shouldResize bool
