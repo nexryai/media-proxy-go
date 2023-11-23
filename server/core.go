@@ -84,7 +84,7 @@ func RequestHandler(ctx *fasthttp.RequestCtx) {
 		case isBadge:
 			widthLimit, heightLimit = 96, 96
 		case isThumbnail:
-			widthLimit, heightLimit = 854, 480
+			widthLimit, heightLimit = 500, 400
 		default:
 			widthLimit, heightLimit = 3200, 3200
 		}
