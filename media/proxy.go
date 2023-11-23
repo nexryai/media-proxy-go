@@ -89,7 +89,7 @@ func ProxyImage(opts *ProxyOpts) (*[]byte, string, error) {
 			core.MsgDebug("Decode ok.")
 		}
 
-		contentType = fmt.Sprintf("image/%s", opts.TargetFormat)
+		contentType = fmt.Sprintf("image/%s", encodeOpts.targetFormat)
 
 		return img, contentType, nil
 
@@ -97,7 +97,6 @@ func ProxyImage(opts *ProxyOpts) (*[]byte, string, error) {
 		// どれにも当てはまらないかつブラウザセーフな形式ならそのままプロキシ
 		core.MsgDebug("Proxy image without transcode")
 		return imageBufferPtr, contentType, nil
-
 	}
 
 	//どれにも当てはまらないならnilを返してクライアントに400を返す
