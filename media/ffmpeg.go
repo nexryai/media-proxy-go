@@ -28,7 +28,7 @@ func convertWithFfmpeg(opts *ffmpegOpts) (*[]byte, error) {
 	cmd := exec.Command("ffmpeg", ffmpegArgs...)
 
 	// パイプ周り
-	if !core.IsDebugMode() {
+	if core.IsDebugMode() {
 		cmd.Stderr = os.Stderr
 	}
 	stdin, err := cmd.StdinPipe()
