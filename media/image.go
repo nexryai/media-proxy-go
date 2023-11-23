@@ -167,11 +167,11 @@ func convertAndResizeImage(opts *transcodeImageOpts) (*[]byte, error) {
 			}
 		}
 
-		// 実験的
 		if opts.targetFormat == "avif" {
 			// AVIF形式に変換
 			encodeOpts := vips.AvifExportParams{
-				Quality:  70,
+				Quality:  65,
+				Effort:   1,
 				Lossless: false,
 			}
 
