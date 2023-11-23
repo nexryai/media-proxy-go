@@ -99,6 +99,8 @@ func convertAndResizeImage(opts *transcodeImageOpts) (*[]byte, error) {
 		var convertedData *[]byte
 
 		if os.Getenv("USE_FFMPEG") == "true" {
+			core.MsgDebug("Use ffmpeg.")
+
 			ffmpegOpts := ffmpegOpts{
 				imageBufferPtr: opts.imageBufferPtr,
 				shouldResize:   shouldResize,

@@ -2,6 +2,7 @@ package media
 
 import (
 	"fmt"
+	"git.sda1.net/media-proxy-go/core"
 	"github.com/google/uuid"
 	"os"
 	"os/exec"
@@ -53,9 +54,13 @@ func convertWithFfmpeg(opts *ffmpegOpts) (*[]byte, error) {
 		return nil, fmt.Errorf("error reading from stdout: %v", err)
 	}
 
-	err = os.Remove(tmpFilePath)
-	if err != nil {
-		return nil, fmt.Errorf("failed to remove tmp file: %v", err)
+	if !core.IsDebugMode() {
+		err = os.Remove(tmpFilePath)
+		if err != nil {
+			return nil, fmt.Errorf("failed to remove tmp file: %v", err)
+		}
+	} else {
+		core.MsgDebug(fmt.Sprintf("tmpFilePath: %s", tmpFilePath))
 	}
 
 	return &ffmpegOut, nil
