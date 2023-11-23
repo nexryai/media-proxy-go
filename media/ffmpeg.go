@@ -19,17 +19,20 @@ func convertWithFfmpeg(opts *ffmpegOpts) (*[]byte, error) {
 
 	ffmpegArgs = append(ffmpegArgs, "-i", "pipe:0", "-vcodec", opts.encoder)
 
+	// 奇数だとエラーになるので偶数にする
+	if opts.height%2 != 0 {
+		opts.height -= 1
+		opts.shouldResize = true
+	}
+
 	if opts.shouldResize {
-		// 奇数だとエラーになるので偶数にする
-		if opts.height%2 != 0 {
-			opts.height -= 1
-		}
 		ffmpegArgs = append(ffmpegArgs, "-vf", fmt.Sprintf("scale=-2:%d", opts.height))
 	}
 
 	ffmpegArgs = append(ffmpegArgs, "-loop", "0", "-crf", strconv.Itoa(int(opts.ffmpegCrf)), "-f", opts.targetFormat, tmpFilePath)
 
 	cmd := exec.Command("ffmpeg", ffmpegArgs...)
+	core.MsgDebug(fmt.Sprintf("ffmpeg args: %s", ffmpegArgs))
 
 	// パイプ周り
 	if core.IsDebugMode() {
