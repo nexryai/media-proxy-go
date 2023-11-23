@@ -13,7 +13,7 @@ MisskeyのMediaProxyとして使える、Goで書かれた軽量なMediaProxy
    
 ### Tips
 #### メモリ使用量が爆発する
-`MALLOC_TRIM_THRESHOLD_`と`MALLOC_MMAP_THRESHOLD_`をかなり小さい値に下げないと永遠にメモリを使い続けます。原因は謎です。強い人教えてください（）
+Jemallocを使ってください
 
 #### `PORT`環境変数
 `PORT`を指定することでlistenするポートを指定できるようになりました。
@@ -28,16 +28,13 @@ services:
     ports:
       - 127.0.0.1:9090:8080
     restart: always
-    environment:
-      - MALLOC_TRIM_THRESHOLD_=16
-      - MALLOC_MMAP_THRESHOLD_=16
 ```
 
 #### `DEBUG_MODE`
 `DEBUG_MODE`はデバッグログを出力するモードです。
 
 #### 制限
- - 現在開発段階なので、本番環境での利用はあまり推奨されません（misskey.sda1.netでは実際に運用していますが）
+ - 現在開発段階なので、本番環境での利用はあまり推奨されません（social.sda1.netでは実際に運用していますが）
  - [Misskeyのメディアプロキシ仕様](https://github.com/misskey-dev/media-proxy/blob/master/SPECIFICATION.md)にはなるべく追従していますが、完全な実装ではありません。以下のような制限があります。
    * フォールバック画像は実装されていません（ToDo）
    * ポート80と443以外へのリクエストはドロップされます
