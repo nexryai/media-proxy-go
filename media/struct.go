@@ -9,12 +9,13 @@ type ProxyOpts struct {
 }
 
 type transcodeImageOpts struct {
-	imageBufferPtr *[]byte
-	widthLimit     int
-	heightLimit    int
-	originalFormat string
-	targetFormat   string
-	isAnimated     bool
+	imageBufferPtr      *[]byte
+	widthLimit          int
+	heightLimit         int
+	originalFormat      string
+	targetFormat        string
+	isAnimated          bool
+	useLibsvtav1ForAvif bool
 }
 
 type ffmpegOpts struct {

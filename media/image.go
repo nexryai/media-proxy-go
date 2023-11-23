@@ -5,6 +5,7 @@ import (
 	"git.sda1.net/media-proxy-go/core"
 	"github.com/davidbyttow/govips/v2/vips"
 	"math"
+	"os"
 )
 
 func isTooBigFile(d *[]byte) bool {
@@ -49,7 +50,7 @@ func convertAndResizeImage(opts *transcodeImageOpts) (*[]byte, error) {
 		shouldResize = true
 	}
 
-	if opts.isAnimated {
+	if opts.isAnimated || os.Getenv("USE_FFMPEG") == "true" {
 		core.MsgDebug("Encode as animated image!")
 
 		// リサイズ系処理（animated）
@@ -95,24 +96,46 @@ func convertAndResizeImage(opts *transcodeImageOpts) (*[]byte, error) {
 			core.MsgDebug(fmt.Sprintf("newWidth: %d newHeight: %d aspectRatio: %v", newWidth, newHeight, aspectRatio))
 		}
 
-		err := image.ThumbnailWithSize(newWidth, newHeight, vips.InterestingAll, vips.SizeDown)
-		if err != nil {
-			return nil, err
+		var convertedData *[]byte
+
+		if os.Getenv("USE_FFMPEG") == "true" {
+			ffmpegOpts := ffmpegOpts{
+				imageBufferPtr: opts.imageBufferPtr,
+				shouldResize:   shouldResize,
+				width:          newWidth,
+				height:         newHeight,
+				encoder:        "libsvtav1",
+				targetFormat:   "avif",
+			}
+
+			convertedData, err = convertWithFfmpeg(&ffmpegOpts)
+			if err != nil {
+				return nil, err
+			}
+
+		} else {
+
+			err := image.ThumbnailWithSize(newWidth, newHeight, vips.InterestingAll, vips.SizeDown)
+			if err != nil {
+				return nil, err
+			}
+
+			// WebP形式に変換
+			encodeOpts := vips.WebpExportParams{
+				Quality:  70,
+				Lossless: false, // Set to true for lossless compression
+			}
+
+			// 変換後の画像データを取得
+			convertedDataBuffer, _, err := image.ExportWebp(&encodeOpts)
+			if err != nil {
+				return nil, err
+			}
+
+			convertedData = &convertedDataBuffer
 		}
 
-		// WebP形式に変換
-		encodeOpts := vips.WebpExportParams{
-			Quality:  70,
-			Lossless: false, // Set to true for lossless compression
-		}
-
-		// 変換後の画像データを取得
-		convertedData, _, err := image.ExportWebp(&encodeOpts)
-		if err != nil {
-			return nil, err
-		}
-
-		return &convertedData, nil
+		return convertedData, nil
 
 	} else {
 		core.MsgDebug("Encode as static image!")
@@ -130,7 +153,7 @@ func convertAndResizeImage(opts *transcodeImageOpts) (*[]byte, error) {
 
 		// 実験的
 		if opts.targetFormat == "avif" {
-			// WebP形式に変換
+			// AVIF形式に変換
 			encodeOpts := vips.AvifExportParams{
 				Quality:  70,
 				Lossless: false,

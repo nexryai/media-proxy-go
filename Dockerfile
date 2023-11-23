@@ -11,12 +11,14 @@ FROM debian:bookworm-slim
 COPY --from=builder /build/mediaproxy /app/mediaproxy
 
 RUN apt update -y \
- && apt install -y tini libvips libde265-0 libjemalloc2 \
+ && apt install -y tini libvips libde265-0 libjemalloc2 ffmpeg \
  && groupadd -g 981 app \
  && useradd -d /app -s /bin/sh -u 981 -g app app \
  && chown -R app:app /app \
  && chmod +x /app/mediaproxy \
- && chmod -R 777 /app
+ && chmod -R 777 /app \
+ && mkdir -p /var/mediaproxy-tmp \
+ && chown -R app:app /var/mediaproxy-tmp
 
 
 USER app
