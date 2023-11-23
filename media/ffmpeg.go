@@ -24,7 +24,7 @@ func convertWithFfmpeg(opts *ffmpegOpts) (*[]byte, error) {
 		if opts.height%2 != 0 {
 			opts.height -= 1
 		}
-		ffmpegArgs = append(ffmpegArgs, "-vf", fmt.Sprintf("scale=%d*dar:%d", opts.height, opts.height))
+		ffmpegArgs = append(ffmpegArgs, "-vf", fmt.Sprintf("scale=-2:%d", opts.height))
 	}
 
 	ffmpegArgs = append(ffmpegArgs, "-loop", "0", "-crf", strconv.Itoa(int(opts.ffmpegCrf)), "-f", opts.targetFormat, tmpFilePath)
