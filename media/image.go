@@ -5,7 +5,6 @@ import (
 	"git.sda1.net/media-proxy-go/core"
 	"github.com/davidbyttow/govips/v2/vips"
 	"math"
-	"os"
 )
 
 func isTooBigFile(d *[]byte) bool {
@@ -50,7 +49,7 @@ func convertAndResizeImage(opts *transcodeImageOpts) (*[]byte, error) {
 		shouldResize = true
 	}
 
-	if opts.isAnimated || os.Getenv("USE_FFMPEG") == "true" {
+	if opts.isAnimated || opts.useLibsvtav1ForAvif {
 		core.MsgDebug("Encode as animated image!")
 
 		// リサイズ系処理（animated）
@@ -98,7 +97,7 @@ func convertAndResizeImage(opts *transcodeImageOpts) (*[]byte, error) {
 
 		var convertedData *[]byte
 
-		if os.Getenv("USE_FFMPEG") == "true" {
+		if opts.useLibsvtav1ForAvif {
 			core.MsgDebug("Use ffmpeg.")
 
 			ffmpegOpts := ffmpegOpts{
@@ -108,6 +107,7 @@ func convertAndResizeImage(opts *transcodeImageOpts) (*[]byte, error) {
 				height:         newHeight,
 				encoder:        "libsvtav1",
 				targetFormat:   "avif",
+				ffmpegCrf:      35,
 			}
 
 			convertedData, err = convertWithFfmpeg(&ffmpegOpts)

@@ -25,4 +25,5 @@ type ffmpegOpts struct {
 	height         int
 	encoder        string
 	targetFormat   string
+	ffmpegCrf      uint8
 }

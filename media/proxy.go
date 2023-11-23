@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"git.sda1.net/media-proxy-go/core"
 	"git.sda1.net/media-proxy-go/security"
+	"os"
 )
 
 // trueであればImageMagickによって処理される。そうでなければそのままプロキシされる
@@ -62,9 +63,9 @@ func ProxyImage(opts *ProxyOpts) (*[]byte, string, error) {
 	}
 
 	if isConvertible(contentType, imageBufferPtr) {
-		core.MsgDebug("Use ImageMagick")
+		core.MsgDebug("Use vips (or ffmpeg)")
 
-		options := &transcodeImageOpts{
+		encodeOpts := &transcodeImageOpts{
 			imageBufferPtr: imageBufferPtr,
 			widthLimit:     opts.WidthLimit,
 			heightLimit:    opts.HeightLimit,
@@ -73,8 +74,13 @@ func ProxyImage(opts *ProxyOpts) (*[]byte, string, error) {
 			isAnimated:     isAnimated,
 		}
 
+		if os.Getenv("USE_FFMPEG") == "1" {
+			encodeOpts.useLibsvtav1ForAvif = true
+			encodeOpts.targetFormat = "avif"
+		}
+
 		// isAnimatedがTrueなら1フレームずつ処理する。!isAnimatedでアニメーション画像をプロキシすると最初の1フレームだけ返ってくる
-		img, err := convertAndResizeImage(options)
+		img, err := convertAndResizeImage(encodeOpts)
 
 		if err != nil {
 			core.MsgWarn(fmt.Sprintf("Failed to decode image: %v", err))
