@@ -34,6 +34,7 @@ func RequestHandler(ctx *fasthttp.RequestCtx) {
 		isStatic := string(queryArgs.Peek("static")) == "1"
 		isPreview := string(queryArgs.Peek("preview")) == "1"
 		isBadge := string(queryArgs.Peek("badge")) == "1"
+		isTicker := string(queryArgs.Peek("ticker")) == "1"
 
 		// v13のプロキシ仕様にはないがv12はこれを使う?ため
 		isThumbnail := string(queryArgs.Peek("thumbnail")) == "1"
@@ -85,6 +86,8 @@ func RequestHandler(ctx *fasthttp.RequestCtx) {
 			widthLimit, heightLimit = 96, 96
 		case isThumbnail:
 			widthLimit, heightLimit = 500, 400
+		case isTicker:
+			widthLimit, heightLimit = 64, 64
 		default:
 			widthLimit, heightLimit = 3200, 3200
 		}
@@ -95,7 +98,8 @@ func RequestHandler(ctx *fasthttp.RequestCtx) {
 			HeightLimit:  heightLimit,
 			IsStatic:     isStatic,
 			TargetFormat: targetFormat,
-			IsEmoji:      isEmoji,
+			// 透過するかどうか
+			IsEmoji: isEmoji || isTicker,
 		}
 
 		proxiedImage, contentType, err = media.ProxyImage(options)
