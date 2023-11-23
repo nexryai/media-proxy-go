@@ -20,6 +20,10 @@ func convertWithFfmpeg(opts *ffmpegOpts) (*[]byte, error) {
 	ffmpegArgs = append(ffmpegArgs, "-i", "pipe:0", "-vcodec", opts.encoder)
 
 	if opts.shouldResize {
+		// 奇数だとエラーになるので偶数にする
+		if opts.height%2 != 0 {
+			opts.height -= 1
+		}
 		ffmpegArgs = append(ffmpegArgs, "-vf", fmt.Sprintf("scale=%d*dar:%d", opts.height, opts.height))
 	}
 
