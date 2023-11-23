@@ -34,6 +34,11 @@ func RequestHandler(ctx *fasthttp.RequestCtx) {
 		isStatic := string(queryArgs.Peek("static")) == "1"
 		isPreview := string(queryArgs.Peek("preview")) == "1"
 		isBadge := string(queryArgs.Peek("badge")) == "1"
+
+		// v13のプロキシ仕様にはないがv12はこれを使う?ため
+		isThumbnail := string(queryArgs.Peek("thumbnail")) == "1"
+
+		// 将来的にデフォルトになるので消す
 		useAvif := string(queryArgs.Peek("avif")) == "1"
 
 		if url == "" {
@@ -78,6 +83,8 @@ func RequestHandler(ctx *fasthttp.RequestCtx) {
 			widthLimit, heightLimit = 200, 200
 		case isBadge:
 			widthLimit, heightLimit = 96, 96
+		case isThumbnail:
+			widthLimit, heightLimit = 1280, 720
 		default:
 			widthLimit, heightLimit = 3200, 3200
 		}
