@@ -80,6 +80,8 @@ func ProxyImage(opts *ProxyOpts) (*[]byte, string, error) {
 				encodeOpts.useLibsvtav1ForAvif = true
 			}
 			encodeOpts.targetFormat = "avif"
+		} else if opts.UserAVIF {
+			encodeOpts.targetFormat = "avif"
 		}
 
 		// isAnimatedがTrueなら1フレームずつ処理する。!isAnimatedでアニメーション画像をプロキシすると最初の1フレームだけ返ってくる

@@ -74,22 +74,31 @@ func RequestHandler(ctx *fasthttp.RequestCtx) {
 		}()
 
 		var widthLimit, heightLimit int
+		// 巨大画像をつかうとたまにAVIFのエンコードに時間がすごいかかるので大きめの画像がありそうならWebPを使う
+		var useAVIF bool
 
 		switch {
 		case isAvatar:
 			widthLimit, heightLimit = 320, 320
+			useAVIF = true
 		case isEmoji:
 			widthLimit, heightLimit = 128, 128
+			useAVIF = true
 		case isPreview:
 			widthLimit, heightLimit = 200, 200
+			useAVIF = false
 		case isBadge:
 			widthLimit, heightLimit = 96, 96
+			useAVIF = true
 		case isThumbnail:
 			widthLimit, heightLimit = 500, 400
+			useAVIF = false
 		case isTicker:
 			widthLimit, heightLimit = 64, 64
+			useAVIF = true
 		default:
 			widthLimit, heightLimit = 3200, 3200
+			useAVIF = false
 		}
 
 		options := &media.ProxyOpts{
@@ -98,8 +107,7 @@ func RequestHandler(ctx *fasthttp.RequestCtx) {
 			HeightLimit:  heightLimit,
 			IsStatic:     isStatic,
 			TargetFormat: targetFormat,
-			// 透過するかどうか
-			IsEmoji: isEmoji || isTicker,
+			UserAVIF:     useAVIF,
 		}
 
 		proxiedImage, contentType, err = media.ProxyImage(options)
