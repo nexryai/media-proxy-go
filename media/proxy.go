@@ -80,7 +80,7 @@ func ProxyImage(opts *ProxyOpts) (*[]byte, string, error) {
 				encodeOpts.useLibsvtav1ForAvif = true
 			}
 			encodeOpts.targetFormat = "avif"
-		} else if opts.UserAVIF {
+		} else if opts.UseAVIF {
 			encodeOpts.targetFormat = "avif"
 		}
 

@@ -6,7 +6,7 @@ type ProxyOpts struct {
 	HeightLimit  int
 	IsStatic     bool
 	IsEmoji      bool
-	UserAVIF     bool
+	UseAVIF      bool
 	TargetFormat string
 }
 
