@@ -58,6 +58,7 @@ func ProxyImage(opts *ProxyOpts) (*[]byte, string, error) {
 	if isAnimatedFormat(contentType, imageBufferPtr) && !opts.IsStatic {
 		core.MsgDebug("Animated image!")
 		isAnimated = true
+		opts.TargetFormat = "webp"
 	} else {
 		isAnimated = false
 	}
@@ -80,7 +81,7 @@ func ProxyImage(opts *ProxyOpts) (*[]byte, string, error) {
 				encodeOpts.useLibsvtav1ForAvif = true
 			}
 			encodeOpts.targetFormat = "avif"
-		} else if opts.UseAVIF {
+		} else if opts.UseAVIF && !isAnimated {
 			encodeOpts.targetFormat = "avif"
 		}
 
