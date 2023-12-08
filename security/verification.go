@@ -33,9 +33,8 @@ func IsSafeUrl(requestedUrl string) bool {
 	// ポート番号を取得
 	port := parsedURL.Port()
 
-	if port != "" && port != "80" && port != "443" && port != "9443" {
+	if port != "" && port != "80" && port != "443" {
 		// 宛先が80と443以外ならブロック
-		// 9443を使ってるサーバーがあるので臨時で許可。ToDo: 環境変数でポートをホワイトリストに追加できるようにする
 		return false
 	}
 
