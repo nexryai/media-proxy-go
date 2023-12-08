@@ -22,8 +22,8 @@ type limitedReader struct {
 func fetchImage(url string) (*[]byte, string, error) {
 	core.MsgDebug(fmt.Sprintf("Download image: %s", url))
 
-	// 現状では30MBに制限しているが変えられるようにするべきかも
-	maxSize := int64(30 * 1024 * 1024)
+	// 現状では6MBに制限しているが変えられるようにするべきかも
+	maxSize := int64(6 * 1024 * 1024)
 
 	resp, err := downloadFile(url, maxSize)
 	if err != nil {
