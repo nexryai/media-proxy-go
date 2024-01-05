@@ -158,7 +158,16 @@ func convertAndResizeImage(opts *transcodeImageOpts) (*[]byte, error) {
 
 		// 画像をリサイズ
 		if shouldResize && !opts.isAnimated {
-			scale = float64(opts.widthLimit) / float64(width)
+			// 超過が大きい方に合わせる
+			widthExcess := width - opts.widthLimit
+			heightExcess := height - opts.heightLimit
+
+			if widthExcess < heightExcess {
+				scale = float64(opts.heightLimit) / float64(height)
+			} else {
+				scale = float64(opts.widthLimit) / float64(width)
+			}
+
 			core.MsgDebug(fmt.Sprintf("scale: %v ", scale))
 
 			err = image.Resize(scale, vips.KernelAuto)

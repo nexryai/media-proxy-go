@@ -75,7 +75,7 @@ func RequestHandler(w http.ResponseWriter, req *http.Request) {
 			widthLimit, heightLimit = 320, 320
 			useAVIF = true
 		case isEmoji:
-			widthLimit, heightLimit = 128, 128
+			widthLimit, heightLimit = 700, 128
 			useAVIF = true
 		case isPreview:
 			widthLimit, heightLimit = 200, 200
