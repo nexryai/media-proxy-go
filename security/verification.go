@@ -14,7 +14,28 @@ func isPrivateAddress(address string) bool {
 	}
 
 	ip := net.ParseIP(address)
-	return ip != nil && (ip.IsLoopback() || ip.IsPrivate())
+	if ip != nil && (ip.IsLoopback() || ip.IsPrivate()) {
+		return true
+	}
+
+	// プライベートアドレスの判定
+	privateCIDRs := []string{
+		"10.0.0.0/8",
+		"172.16.0.0/12",
+		"192.168.0.0/16",
+		"100.64.0.0/10",  // Tailscaleとかで使うやつ: ip.IsPrivate()では判定できない
+		"169.254.0.0/16", // リンクローカルアドレス: ip.IsPrivate()では判定できない
+	}
+
+	for _, privateCIDR := range privateCIDRs {
+		_, privateNet, err := net.ParseCIDR(privateCIDR)
+		if err == nil && privateNet.Contains(ip) {
+			return true
+		}
+	}
+
+	// その他の条件が満たされない場合はパブリックアドレスとみなす
+	return false
 }
 
 func IsSafeUrl(requestedUrl string) bool {
@@ -25,8 +46,27 @@ func IsSafeUrl(requestedUrl string) bool {
 		return false
 	}
 
-	// Unixソケットを拒否
-	if strings.HasPrefix(parsedURL.Scheme, "unix") {
+	// https以外は拒否
+	if parsedURL.Scheme != "https" {
+		core.MsgDebug("Invalid protocol")
+		return false
+	}
+
+	// UnixソケットとIPv6アドレス指定を拒否
+	if strings.Contains(parsedURL.Hostname(), ":") {
+		core.MsgDebug("Unix socket detected")
+		return false
+	}
+
+	// おかしいね
+	if !strings.Contains(parsedURL.Hostname(), ".") {
+		core.MsgDebug("Hostname does not contain dot")
+		return false
+	}
+
+	// 認証情報を含むのは拒否
+	if parsedURL.User != nil {
+		core.MsgDebug("User info detected")
 		return false
 	}
 
