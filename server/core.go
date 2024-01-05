@@ -3,61 +3,54 @@ package server
 import (
 	"encoding/json"
 	"fmt"
-	"git.sda1.net/media-proxy-go/core"
 	"git.sda1.net/media-proxy-go/media"
 	"git.sda1.net/media-proxy-go/security"
-	"github.com/valyala/fasthttp"
-	"runtime"
+	"net/http"
 )
 
-func RequestHandler(ctx *fasthttp.RequestCtx) {
-	path := string(ctx.Path())
+func RequestHandler(w http.ResponseWriter, req *http.Request) {
+	path := req.URL.Path
 
-	core.MsgInfo(fmt.Sprintf("Handled request: %s", path))
+	fmt.Printf("Handled request: %s\n", path)
 
 	switch path {
 	case "/status":
 		status := Status{Status: "OK"}
 		jsonData, err := json.Marshal(status)
 		if err != nil {
-			ctx.Error("Internal Server Error", fasthttp.StatusInternalServerError)
+			http.Error(w, "Internal Server Error", http.StatusInternalServerError)
 			return
 		}
-		ctx.Response.Header.Set("Content-Type", "application/json")
-		ctx.Write(jsonData)
+		w.Header().Set("Content-Type", "application/json")
+		w.Write(jsonData)
 
 	default:
-		queryArgs := ctx.QueryArgs()
-		url := string(queryArgs.Peek("url"))
-		isAvatar := string(queryArgs.Peek("avatar")) == "1"
-		isEmoji := string(queryArgs.Peek("emoji")) == "1"
-		isStatic := string(queryArgs.Peek("static")) == "1"
-		isPreview := string(queryArgs.Peek("preview")) == "1"
-		isBadge := string(queryArgs.Peek("badge")) == "1"
-		isTicker := string(queryArgs.Peek("ticker")) == "1"
+		queryArgs := req.URL.Query()
+		url := queryArgs.Get("url")
+		isAvatar := queryArgs.Get("avatar") == "1"
+		isEmoji := queryArgs.Get("emoji") == "1"
+		isStatic := queryArgs.Get("static") == "1"
+		isPreview := queryArgs.Get("preview") == "1"
+		isBadge := queryArgs.Get("badge") == "1"
+		isTicker := queryArgs.Get("ticker") == "1"
 
 		// v13のプロキシ仕様にはないがv12はこれを使う?ため
-		isThumbnail := string(queryArgs.Peek("thumbnail")) == "1"
+		isThumbnail := queryArgs.Get("thumbnail") == "1"
 
-		// 将来的にデフォルトになるので消す
-		useAvif := string(queryArgs.Peek("avif")) == "1"
+		forceAVIF := queryArgs.Get("avif") == "1"
 
 		if url == "" {
-			ctx.Error("Bad request", fasthttp.StatusBadRequest)
+			http.Error(w, "Bad request", http.StatusBadRequest)
 			return
 		}
 
 		// ポートが指定されている、ホスト名がプライベートアドレスを示している場合はブロック
 		if !security.IsSafeUrl(url) {
-			ctx.Error("Access denied", fasthttp.StatusForbidden)
+			http.Error(w, "Access denied", http.StatusForbidden)
 			return
 		}
 
 		targetFormat := "webp"
-		if useAvif {
-			// 試験的
-			targetFormat = "avif"
-		}
 
 		var proxiedImage *[]byte
 		var contentType string
@@ -67,8 +60,8 @@ func RequestHandler(ctx *fasthttp.RequestCtx) {
 		defer func() {
 			if r := recover(); r != nil {
 				// パニックが発生した場合、エラーレスポンスを返す
-				core.MsgErr(fmt.Sprintf("Panic occurred while proxying media: %s", r.(error)))
-				ctx.Error("Internal Server Error", fasthttp.StatusInternalServerError)
+				fmt.Printf("Panic occurred while proxying media: %s\n", r)
+				http.Error(w, "Internal Server Error", http.StatusInternalServerError)
 				return
 			}
 		}()
@@ -101,29 +94,29 @@ func RequestHandler(ctx *fasthttp.RequestCtx) {
 			useAVIF = false
 		}
 
+		if forceAVIF || useAVIF {
+			targetFormat = "avif"
+		}
+
 		options := &media.ProxyOpts{
 			Url:          url,
 			WidthLimit:   widthLimit,
 			HeightLimit:  heightLimit,
 			IsStatic:     isStatic,
 			TargetFormat: targetFormat,
-			UseAVIF:      useAVIF,
+			UseAVIF:      useAVIF || forceAVIF,
 		}
 
 		proxiedImage, contentType, err = media.ProxyImage(options)
 
 		if err != nil {
-			ctx.Error("Bad request", fasthttp.StatusBadRequest)
+			http.Error(w, "Bad request", http.StatusBadRequest)
 			return
 		}
 
-		ctx.Response.Header.SetContentType(contentType)
-		ctx.Response.Header.Set("CDN-Cache-Control", "max-age=604800")
-		ctx.Response.Header.Set("Cache-Control", "max-age=432000")
-		ctx.Response.SetBody(*proxiedImage)
-
-		// これ効果なさそう？
-		runtime.GC()
-
+		w.Header().Set("Content-Type", contentType)
+		w.Header().Set("CDN-Cache-Control", "max-age=604800")
+		w.Header().Set("Cache-Control", "max-age=432000")
+		w.Write(*proxiedImage)
 	}
 }

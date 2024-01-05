@@ -5,18 +5,19 @@ import (
 	"git.sda1.net/media-proxy-go/core"
 	"git.sda1.net/media-proxy-go/server"
 	"github.com/davidbyttow/govips/v2/vips"
-	"github.com/valyala/fasthttp"
+	"net/http"
 	"os"
 	"strconv"
 )
 
 func createServer(port int) {
 	listenPort := strconv.Itoa(port)
-	core.MsgInfo("listens on port " + listenPort)
+	fmt.Println("listens on port " + listenPort)
 
-	err := fasthttp.ListenAndServe(fmt.Sprintf(":%s", listenPort), server.RequestHandler)
-	core.ExitOnError(err, "Failed to create server")
+	http.HandleFunc("/", server.RequestHandler)
 
+	err := http.ListenAndServe(":"+listenPort, nil)
+	core.ExitOnError(err, "Failed to start server")
 }
 
 func getPort() int {
