@@ -8,7 +8,6 @@ import (
 )
 
 func testFetchImageFromUrl(t *testing.T, url string, expectedContentType string) {
-	// テスト対象の関数を呼び出し
 	imageBufferPtr, contentType, err := fetchImage(url)
 	if err != nil {
 		t.Errorf("fetchImage returned an error: %v", err)
@@ -42,6 +41,9 @@ func TestFetchImage(t *testing.T) {
 
 	// jpeg
 	testFetchImageFromUrl(t, "https://upload.wikimedia.org/wikipedia/en/a/a9/Example.jpg", "image/jpeg")
+
+	// avif
+	testFetchImageFromUrl(t, "https://s3.sda1.net/nyan/contents/bc0701f3-6a5e-471e-ae35-ddfae7d0b7f6.avif", "image/avif")
 }
 
 func TestDownloadFile(t *testing.T) {

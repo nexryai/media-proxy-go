@@ -106,5 +106,6 @@ func ProxyImage(opts *ProxyOpts) (*[]byte, string, error) {
 	}
 
 	//どれにも当てはまらないならnilを返してクライアントに400を返す
+	core.MsgDebug(contentType + " is not supported")
 	return nil, contentType, fmt.Errorf("invalid file format")
 }

@@ -21,3 +21,7 @@ func isAnimatedWebP(imageData *[]byte) bool {
 	// Animated WebPの場合、ファイルの0x1Eから0x22がANIMになる
 	return string((*imageData)[0x1E:0x22]) == "ANIM"
 }
+
+func isAVIF(data *[]byte) bool {
+	return len(*data) > 12 && string((*data)[4:12]) == "ftypavif"
+}

@@ -50,6 +50,11 @@ func fetchImage(url string) (*[]byte, string, error) {
 	// SVGが平文扱いになるのをなんとかする
 	if contentType == "text/plain; charset=utf-8" && resp.Header.Get("Content-Type") == "image/svg+xml" {
 		contentType = "image/svg+xml"
+	} else if contentType == "application/octet-stream" {
+		// http.DetectContentTypeがAVIFを正しく認識しないのでバッファーの先頭を読んで気合で判別する
+		if isAVIF(&body) {
+			contentType = "image/avif"
+		}
 	}
 
 	core.MsgDebug("Detected MIME: " + contentType)

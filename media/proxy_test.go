@@ -49,6 +49,26 @@ func TestProxyImageDecoding(t *testing.T) {
 	testProxyImageDecodingFromUrl(t, "https://s3.sda1.net/firefish/contents/7afe76e0-7d6f-4827-bc72-7c9d613aa7b9.jpg", 1280, 1280, false)
 }
 
+func TestAvifProxy(t *testing.T) {
+	options := &ProxyOpts{
+		Url:          "https://s3.sda1.net/nyan/contents/bc0701f3-6a5e-471e-ae35-ddfae7d0b7f6.avif",
+		WidthLimit:   128,
+		HeightLimit:  128,
+		IsStatic:     false,
+		TargetFormat: "avif",
+	}
+
+	// ProxyImage関数の呼び出し
+	imageBytes, _, _ := ProxyImage(options)
+	if imageBytes == nil {
+		t.Fatal("Failed to fetch and encode image")
+	}
+
+	if !isAVIF(imageBytes) {
+		t.Errorf("Failed to encode as AVIF")
+	}
+}
+
 func TestAnimatedImageProxy(t *testing.T) {
 	options := &ProxyOpts{
 		Url:          "https://www.easygifanimator.net/images/samples/video-to-gif-sample.gif",
