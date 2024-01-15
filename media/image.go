@@ -13,7 +13,6 @@ func isTooBigFile(d *[]byte) bool {
 }
 
 func convertAndResizeImage(opts *transcodeImageOpts) (*[]byte, error) {
-
 	var image *vips.ImageRef
 	var err error
 

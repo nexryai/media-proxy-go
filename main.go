@@ -45,7 +45,12 @@ func main() {
 	}
 
 	// vipsの初期化
-	vips.Startup(nil)
+	vips.Startup(&vips.Config{
+		ConcurrencyLevel: 1,
+		MaxCacheMem:      8 * 1024 * 1024,
+		MaxCacheSize:     32,
+		MaxCacheFiles:    32,
+	})
 	defer vips.Shutdown()
 
 	port := getPort()
