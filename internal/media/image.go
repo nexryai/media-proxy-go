@@ -1,12 +1,74 @@
 package media
 
 import (
+	"bytes"
 	"fmt"
 	"git.sda1.net/media-proxy-go/internal/core"
 	"git.sda1.net/media-proxy-go/internal/logger"
 	"github.com/davidbyttow/govips/v2/vips"
 	"math"
+	"os"
+	"os/exec"
+	"strconv"
 )
+
+func convertWithFfmpeg(opts *ffmpegOpts) (*[]byte, error) {
+	log := logger.GetLogger("ffmpeg")
+
+	ffmpegArgs := []string{"-i", "pipe:0"}
+
+	// 奇数だとエラーになるので偶数にする
+	if opts.height%2 != 0 {
+		opts.height -= 1
+		opts.shouldResize = true
+	} else if opts.width%2 != 0 {
+		// オプションに奇数を指定しなくても元画像の幅が奇数かつリサイズ無しでプロキシしようとするとエラーになるっぽい
+		opts.shouldResize = true
+	}
+
+	if opts.shouldResize {
+		ffmpegArgs = append(ffmpegArgs, "-vf", fmt.Sprintf("scale=-2:%d", opts.height))
+	}
+
+	ffmpegArgs = append(ffmpegArgs, "-loop", "0", "-pix_fmt", "yuva420p", "-crf", strconv.Itoa(int(opts.ffmpegCrf)), "-f", opts.targetFormat, "-")
+
+	cmd := exec.Command("ffmpeg", ffmpegArgs...)
+	log.Debug(fmt.Sprintf("ffmpeg args: %s", ffmpegArgs))
+
+	// パイプ周り
+	var stdoutBuffer bytes.Buffer
+	cmd.Stdout = &stdoutBuffer
+
+	if core.IsDebugMode() {
+		cmd.Stderr = os.Stderr
+	}
+
+	stdin, err := cmd.StdinPipe()
+	if err != nil {
+		return nil, err
+	}
+	defer stdin.Close()
+
+	if err := cmd.Start(); err != nil {
+		return nil, fmt.Errorf("failed to start command: %v", err)
+	}
+
+	_, err = stdin.Write(*opts.imageBufferPtr)
+	if err != nil {
+		return nil, fmt.Errorf("error writing to stdin: %v", err)
+	}
+	stdin.Close()
+
+	// 終了を待機
+	if err := cmd.Wait(); err != nil {
+		return nil, fmt.Errorf("command execution error: %v", err)
+	}
+
+	result := stdoutBuffer.Bytes()
+
+	return &result, nil
+
+}
 
 func convertAndResizeImage(opts *transcodeImageOpts) (*[]byte, error) {
 	log := logger.GetLogger("MediaService")
@@ -49,11 +111,6 @@ func convertAndResizeImage(opts *transcodeImageOpts) (*[]byte, error) {
 
 	if width > 5120 || height > 5120 {
 		return nil, fmt.Errorf("too large image")
-	}
-
-	// 現状svtav1は縦か横が最低でも64pxないとエラーになる
-	if width < 64 || height < 64 {
-		opts.useLibsvtav1ForAvif = false
 	}
 
 	// リサイズ系処理
@@ -106,7 +163,7 @@ func convertAndResizeImage(opts *transcodeImageOpts) (*[]byte, error) {
 			log.Debug(fmt.Sprintf("newWidth: %d newHeight: %d aspectRatio: %v", newWidth, newHeight, aspectRatio))
 		}
 
-		err := image.ThumbnailWithSize(newWidth, newHeight, vips.InterestingAll, vips.SizeDown)
+		err = image.ThumbnailWithSize(newWidth, newHeight, vips.InterestingAll, vips.SizeDown)
 		if err != nil {
 			return nil, err
 		}

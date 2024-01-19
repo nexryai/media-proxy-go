@@ -7,11 +7,7 @@ import (
 )
 
 func IsDebugMode() bool {
-	return os.Getenv("DEBUG_MODE") == "1"
-}
-
-func GetProxyConfig() string {
-	return os.Getenv("PROXY")
+	return os.Getenv("DEBUG") == "1"
 }
 
 func RaisePanicOnHighMemoryUsage(threshold float64) {
