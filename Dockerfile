@@ -12,7 +12,7 @@ FROM alpine:3.19
 COPY --from=builder /build/mediaproxy /app/mediaproxy
 
 RUN sed -i 's#https\?://dl-cdn.alpinelinux.org/alpine#https://mirrors.xtom.com.hk/alpine#g' /etc/apk/repositories \
- && apk add --no-cache ca-certificates tini vips vips-heif \
+ && apk add --no-cache ca-certificates tini vips vips-heif ffmpeg \
  && addgroup -g 981 app \
  && adduser -u 981 -G app -D -h /app app \
  && chown -R app:app /app \
