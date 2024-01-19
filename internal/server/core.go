@@ -3,12 +3,21 @@ package server
 import (
 	"encoding/json"
 	"fmt"
+	"git.sda1.net/media-proxy-go/internal/logger"
 	"git.sda1.net/media-proxy-go/internal/media"
+	"git.sda1.net/media-proxy-go/internal/queue"
+	"github.com/hibiken/asynq"
 	"github.com/nexryai/archer"
+	"io"
 	"net/http"
+	"os"
+	"time"
 )
 
+const redisAddr = "127.0.0.1:6379"
+
 func RequestHandler(w http.ResponseWriter, req *http.Request) {
+	log := logger.GetLogger("Server")
 	path := req.URL.Path
 
 	fmt.Printf("Handled request: %s\n", path)
@@ -52,7 +61,6 @@ func RequestHandler(w http.ResponseWriter, req *http.Request) {
 
 		targetFormat := "webp"
 
-		var proxiedImage *[]byte
 		var contentType string
 		var err error
 
@@ -60,7 +68,7 @@ func RequestHandler(w http.ResponseWriter, req *http.Request) {
 		defer func() {
 			if r := recover(); r != nil {
 				// パニックが発生した場合、エラーレスポンスを返す
-				fmt.Printf("Panic occurred while proxying media: %s\n", r)
+				log.Fatal("Panic occurred while proxying media")
 				http.Error(w, "Internal Server Error", http.StatusInternalServerError)
 				return
 			}
@@ -98,7 +106,7 @@ func RequestHandler(w http.ResponseWriter, req *http.Request) {
 			targetFormat = "avif"
 		}
 
-		options := &media.ProxyOpts{
+		options := &media.ProxyRequest{
 			Url:          url,
 			WidthLimit:   widthLimit,
 			HeightLimit:  heightLimit,
@@ -107,16 +115,72 @@ func RequestHandler(w http.ResponseWriter, req *http.Request) {
 			UseAVIF:      useAVIF || forceAVIF,
 		}
 
-		proxiedImage, contentType, err = media.ProxyImage(options)
+		// キャッシュが存在しない場合はキューにタスクを投げてキャッシュを作成する
+		if !media.CacheExists(options) {
+			log.Debug("Cache not found. Waiting for cache to be created")
+			client := asynq.NewClient(asynq.RedisClientOpt{Addr: redisAddr})
+			defer client.Close()
+
+			task, err := queue.NewProxyRequestTask(options)
+			if err != nil {
+				log.ErrorWithDetail("Failed to create task", err)
+				http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+				return
+			}
+
+			_, err = client.Enqueue(task, asynq.MaxRetry(1), asynq.Timeout(15*time.Second))
+			if err != nil {
+				log.ErrorWithDetail("Failed to enqueue task", err)
+			}
+
+			// キャッシュが作成されるまで待つ
+			i := 0
+			for {
+				i += 1
+				time.Sleep(1 * time.Second)
+				if media.CacheExists(options) {
+					log.Debug("Cache created!")
+					break
+				} else if i > 15 {
+					log.Error("Timeout")
+					http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+					return
+				}
+			}
+		}
+
+		log.Debug("Streaming from cache")
+		cachePath, err := media.GetCachePath(options)
+
+		file, err := os.Open(cachePath)
+		if err != nil {
+			log.ErrorWithDetail("Failed to open cache file", err)
+			http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+			return
+		}
+		defer file.Close()
 
 		if err != nil {
-			http.Error(w, "Bad request", http.StatusBadRequest)
+			log.ErrorWithDetail("Failed to get cache path", err)
+			http.Error(w, "Internal Server Error", http.StatusInternalServerError)
 			return
+		}
+
+		_, err = io.Copy(w, file)
+		if err != nil {
+			log.ErrorWithDetail("Failed to write response", err)
+			http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+			return
+		}
+
+		if options.TargetFormat == "avif" {
+			contentType = "image/avif"
+		} else {
+			contentType = "image/webp"
 		}
 
 		w.Header().Set("Content-Type", contentType)
 		w.Header().Set("CDN-Cache-Control", "max-age=604800")
 		w.Header().Set("Cache-Control", "max-age=432000")
-		w.Write(*proxiedImage)
 	}
 }

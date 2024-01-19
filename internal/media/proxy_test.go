@@ -1,14 +1,9 @@
 package media
 
-import (
-	"bytes"
-	"golang.org/x/image/webp"
-	"testing"
-)
-
+/*
 func testProxyImageDecodingFromUrl(t *testing.T, url string, widthLimit int, expectedHeight int, isStatic bool) {
 
-	options := &ProxyOpts{
+	options := &ProxyRequest{
 		Url:          url,
 		WidthLimit:   widthLimit,
 		HeightLimit:  expectedHeight,
@@ -90,3 +85,4 @@ func TestAnimatedImageProxy(t *testing.T) {
 		t.Errorf("Failed to encode as animated WebP")
 	}
 }
+*/

@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"git.sda1.net/media-proxy-go/internal/core"
 	"git.sda1.net/media-proxy-go/internal/logger"
+	"git.sda1.net/media-proxy-go/internal/processor"
 	"git.sda1.net/media-proxy-go/internal/server"
 	"github.com/davidbyttow/govips/v2/vips"
 	"github.com/nexryai/visualog"
@@ -16,12 +17,17 @@ func createServer(port int, log visualog.Logger) {
 	log.ProgressInfo("Starting server ...")
 
 	listenPort := strconv.Itoa(port)
-
 	http.HandleFunc("/", server.RequestHandler)
 
 	log.ProgressOk()
 	fmt.Print("\n")
 	log.Info("Listening on port " + listenPort)
+
+	log.ProgressInfo("Starting queue processor ...")
+	go func() {
+		processor.ProxyQueueProcessor()
+	}()
+	log.ProgressOk()
 
 	err := http.ListenAndServe(":"+listenPort, nil)
 	if err != nil {
@@ -53,6 +59,10 @@ func main() {
 	log.Info("Starting media-proxy-go ...")
 	if core.IsDebugMode() {
 		log.Warn("@@>>>>> Debug mode is enabled!!! NEVER use this in a production environment!! Debugging endpoints can leak sensitive information!!!!! <<<<<@@")
+	}
+
+	if os.Getenv("CACHE_DIR") == "" {
+		os.Setenv("CACHE_DIR", "/tmp/debug")
 	}
 
 	// vipsの初期化
