@@ -3,8 +3,8 @@ package server
 import (
 	"encoding/json"
 	"fmt"
-	"git.sda1.net/media-proxy-go/media"
-	"git.sda1.net/media-proxy-go/security"
+	"git.sda1.net/media-proxy-go/internal/media"
+	"github.com/nexryai/archer"
 	"net/http"
 )
 
@@ -45,7 +45,7 @@ func RequestHandler(w http.ResponseWriter, req *http.Request) {
 		}
 
 		// ポートが指定されている、ホスト名がプライベートアドレスを示している場合はブロック
-		if !security.IsSafeUrl(url) {
+		if !archer.IsSafeUrl(url) {
 			http.Error(w, "Access denied", http.StatusForbidden)
 			return
 		}

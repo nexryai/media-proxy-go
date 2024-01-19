@@ -2,8 +2,8 @@ package media
 
 import (
 	"fmt"
-	"git.sda1.net/media-proxy-go/core"
-	"git.sda1.net/media-proxy-go/security"
+	"git.sda1.net/media-proxy-go/internal/logger"
+	"git.sda1.net/media-proxy-go/internal/security"
 	"os"
 )
 
@@ -44,19 +44,20 @@ func isAnimatedFormat(contentType string, fetchedImage *[]byte) bool {
 }
 
 func ProxyImage(opts *ProxyOpts) (*[]byte, string, error) {
+	log := logger.GetLogger("MediaService")
 
 	imageBufferPtr, contentType, err := fetchImage(opts.Url)
 	if err != nil {
-		core.MsgErrWithDetail(err, "Failed to download image")
+		log.ErrorWithDetail("Failed to download image", err)
 		return nil, contentType, fmt.Errorf("failed to download image")
 	}
 
-	core.MsgDebug("Content-Type: " + contentType)
+	log.Debug("Content-Type: " + contentType)
 
 	var isAnimated bool
 
 	if isAnimatedFormat(contentType, imageBufferPtr) && !opts.IsStatic {
-		core.MsgDebug("Animated image!")
+		log.Debug("Animated image!")
 		isAnimated = true
 		opts.TargetFormat = "webp"
 	} else {
@@ -64,7 +65,7 @@ func ProxyImage(opts *ProxyOpts) (*[]byte, string, error) {
 	}
 
 	if isConvertible(contentType, imageBufferPtr) {
-		core.MsgDebug("Use vips (or ffmpeg)")
+		log.Debug("Use vips (or ffmpeg)")
 
 		encodeOpts := &transcodeImageOpts{
 			imageBufferPtr: imageBufferPtr,
@@ -89,10 +90,10 @@ func ProxyImage(opts *ProxyOpts) (*[]byte, string, error) {
 		img, err := convertAndResizeImage(encodeOpts)
 
 		if err != nil {
-			core.MsgWarn(fmt.Sprintf("Failed to decode image: %v", err))
+			log.Warn(fmt.Sprintf("Failed to decode image: %v", err))
 			return nil, contentType, fmt.Errorf("failed to decode image")
 		} else {
-			core.MsgDebug("Decode ok.")
+			log.Debug("Decode ok.")
 		}
 
 		contentType = fmt.Sprintf("image/%s", encodeOpts.targetFormat)
@@ -101,11 +102,11 @@ func ProxyImage(opts *ProxyOpts) (*[]byte, string, error) {
 
 	} else if security.IsFileTypeBrowserSafe(contentType) {
 		// どれにも当てはまらないかつブラウザセーフな形式ならそのままプロキシ
-		core.MsgDebug("Proxy image without transcode")
+		log.Debug("Proxy image without transcode")
 		return imageBufferPtr, contentType, nil
 	}
 
 	//どれにも当てはまらないならnilを返してクライアントに400を返す
-	core.MsgDebug(contentType + " is not supported")
+	log.Debug(contentType + " is not supported")
 	return nil, contentType, fmt.Errorf("invalid file format")
 }

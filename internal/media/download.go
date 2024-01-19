@@ -3,24 +3,19 @@ package media
 import (
 	"bytes"
 	"fmt"
-	"git.sda1.net/media-proxy-go/core"
+	"git.sda1.net/media-proxy-go/internal/logger"
+	"github.com/nexryai/archer"
 	_ "image/gif"
 	_ "image/jpeg"
 	_ "image/png"
 	"io"
 	"net/http"
-	"net/url"
-	"strconv"
 )
-
-type limitedReader struct {
-	rc io.ReadCloser
-	n  int64
-}
 
 // URLを取得して、バッファーのポインタを返す
 func fetchImage(url string) (*[]byte, string, error) {
-	core.MsgDebug(fmt.Sprintf("Download image: %s", url))
+	log := logger.GetLogger("MediaService")
+	log.Debug(fmt.Sprintf("Download image: %s", url))
 
 	// 現状では6MBに制限しているが変えられるようにするべきかも
 	maxSize := int64(6 * 1024 * 1024)
@@ -29,9 +24,6 @@ func fetchImage(url string) (*[]byte, string, error) {
 	if err != nil {
 		return nil, "", fmt.Errorf("failed to fetch image: %v", err)
 	}
-
-	// これだと偽装できる
-	//contentType := resp.Header.Get("Content-Type")
 
 	var buf bytes.Buffer
 	_, err = io.Copy(&buf, resp.Body)
@@ -57,13 +49,13 @@ func fetchImage(url string) (*[]byte, string, error) {
 		}
 	}
 
-	core.MsgDebug("Detected MIME: " + contentType)
+	log.Debug("Detected MIME: " + contentType)
 
 	if resp.StatusCode != http.StatusOK {
-		core.MsgWarn("Failed to download image. URL: " + url + ", Status: " + resp.Status)
+		log.Warn("Failed to download image. URL: " + url + ", Status: " + resp.Status)
 		return nil, contentType, fmt.Errorf("failed to fetch image: error status code %d", resp.StatusCode)
 	} else {
-		core.MsgDebug("Request OK.")
+		log.Debug("Request OK.")
 	}
 
 	return &body, contentType, nil
@@ -72,7 +64,6 @@ func fetchImage(url string) (*[]byte, string, error) {
 // サイズ制限付きダウンローダー
 func downloadFile(targetUrl string, maxSize int64) (*http.Response, error) {
 	// リクエストを作成
-	client := mkHttpClient()
 	req, err := http.NewRequest("GET", targetUrl, nil)
 	if err != nil {
 		return nil, err
@@ -81,63 +72,16 @@ func downloadFile(targetUrl string, maxSize int64) (*http.Response, error) {
 	// ユーザーエージェントを設定
 	req.Header.Set("User-Agent", "Misskey-Media-Proxy-Go v0.10")
 
+	secureRequestService := archer.SecureRequest{
+		Request: req,
+		MaxSize: maxSize,
+	}
+
 	// リクエストを送信
-	resp, err := client.Do(req)
+	resp, err := secureRequestService.Send()
 	if err != nil {
 		return nil, err
 	}
 
-	// ファイルサイズが制限を超えているかチェック
-	contentLength := resp.Header.Get("Content-Length")
-	if contentLength != "" {
-		length, err := strconv.ParseInt(contentLength, 10, 64)
-		if err != nil {
-			return nil, err
-		}
-		if length > maxSize {
-			return nil, fmt.Errorf("file size exceeds the limit")
-		}
-	}
-
-	resp.Body = &limitedReader{rc: resp.Body, n: maxSize}
 	return resp, nil
-}
-
-// プロキシ設定に応じていい感じのhttp.Clientを生成する
-func mkHttpClient() *http.Client {
-	if core.GetProxyConfig() != "" {
-		core.MsgDebug("Use proxy")
-
-		proxyUrl, err := url.Parse(core.GetProxyConfig())
-		if err != nil {
-			core.MsgWarn("Invalid proxy config. Ignore.")
-		}
-
-		transport := &http.Transport{
-			Proxy: http.ProxyURL(proxyUrl),
-		}
-
-		return &http.Client{
-			Transport: transport,
-		}
-
-	} else {
-		return &http.Client{}
-	}
-}
-
-func (lr *limitedReader) Read(p []byte) (int, error) {
-	if lr.n <= 0 {
-		return 0, io.EOF
-	}
-	if int64(len(p)) > lr.n {
-		p = p[:lr.n]
-	}
-	n, err := lr.rc.Read(p)
-	lr.n -= int64(n)
-	return n, err
-}
-
-func (lr *limitedReader) Close() error {
-	return lr.rc.Close()
 }

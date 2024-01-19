@@ -2,17 +2,15 @@ package media
 
 import (
 	"fmt"
-	"git.sda1.net/media-proxy-go/core"
+	"git.sda1.net/media-proxy-go/internal/core"
+	"git.sda1.net/media-proxy-go/internal/logger"
 	"github.com/davidbyttow/govips/v2/vips"
 	"math"
 )
 
-func isTooBigFile(d *[]byte) bool {
-	// 2MB以上ならTrue
-	return len(*d) >= 2*1024*1024
-}
-
 func convertAndResizeImage(opts *transcodeImageOpts) (*[]byte, error) {
+	log := logger.GetLogger("MediaService")
+
 	var image *vips.ImageRef
 	var err error
 
@@ -36,7 +34,7 @@ func convertAndResizeImage(opts *transcodeImageOpts) (*[]byte, error) {
 
 	if opts.isAnimated {
 		numFrames := image.Pages()
-		core.MsgDebug(fmt.Sprintf("frames: %d", numFrames))
+		log.Debug(fmt.Sprintf("frames: %d", numFrames))
 
 		width = image.Width()
 		// vipsにアニメーション画像を読ませると全部のフレームの合計が高さとして認識されるのでフレーム数で割る
@@ -47,7 +45,7 @@ func convertAndResizeImage(opts *transcodeImageOpts) (*[]byte, error) {
 		height = image.Height()
 	}
 
-	core.MsgDebug(fmt.Sprintf("w: %d h: %d", width, height))
+	log.Debug(fmt.Sprintf("w: %d h: %d", width, height))
 
 	if width > 5120 || height > 5120 {
 		return nil, fmt.Errorf("too large image")
@@ -67,7 +65,7 @@ func convertAndResizeImage(opts *transcodeImageOpts) (*[]byte, error) {
 	}
 
 	if opts.isAnimated || opts.useLibsvtav1ForAvif {
-		core.MsgDebug("Encode as animated image!")
+		log.Debug("Encode as animated image!")
 
 		// リサイズ系処理（animated）
 		newWidth := width
@@ -105,55 +103,30 @@ func convertAndResizeImage(opts *transcodeImageOpts) (*[]byte, error) {
 				}
 			}
 
-			core.MsgDebug(fmt.Sprintf("newWidth: %d newHeight: %d aspectRatio: %v", newWidth, newHeight, aspectRatio))
+			log.Debug(fmt.Sprintf("newWidth: %d newHeight: %d aspectRatio: %v", newWidth, newHeight, aspectRatio))
 		}
 
-		var convertedData *[]byte
-
-		if opts.useLibsvtav1ForAvif {
-			core.MsgDebug("Use ffmpeg.")
-
-			ffmpegOpts := ffmpegOpts{
-				imageBufferPtr: opts.imageBufferPtr,
-				shouldResize:   shouldResize,
-				width:          newWidth,
-				height:         newHeight,
-				encoder:        "libsvtav1",
-				targetFormat:   "avif",
-				ffmpegCrf:      35,
-			}
-
-			convertedData, err = convertWithFfmpeg(&ffmpegOpts)
-			if err != nil {
-				return nil, err
-			}
-
-		} else {
-
-			err := image.ThumbnailWithSize(newWidth, newHeight, vips.InterestingAll, vips.SizeDown)
-			if err != nil {
-				return nil, err
-			}
-
-			// WebP形式に変換
-			encodeOpts := vips.WebpExportParams{
-				Quality:  70,
-				Lossless: false, // Set to true for lossless compression
-			}
-
-			// 変換後の画像データを取得
-			convertedDataBuffer, _, err := image.ExportWebp(&encodeOpts)
-			if err != nil {
-				return nil, err
-			}
-
-			convertedData = &convertedDataBuffer
+		err := image.ThumbnailWithSize(newWidth, newHeight, vips.InterestingAll, vips.SizeDown)
+		if err != nil {
+			return nil, err
 		}
 
-		return convertedData, nil
+		// WebP形式に変換
+		encodeOpts := vips.WebpExportParams{
+			Quality:  70,
+			Lossless: false, // Set to true for lossless compression
+		}
+
+		// 変換後の画像データを取得
+		convertedDataBuffer, _, err := image.ExportWebp(&encodeOpts)
+		if err != nil {
+			return nil, err
+		}
+
+		return &convertedDataBuffer, nil
 
 	} else {
-		core.MsgDebug("Encode as static image!")
+		log.Debug("Encode as static image!")
 
 		// 画像をリサイズ
 		if shouldResize && !opts.isAnimated {
@@ -167,7 +140,7 @@ func convertAndResizeImage(opts *transcodeImageOpts) (*[]byte, error) {
 				scale = float64(opts.widthLimit) / float64(width)
 			}
 
-			core.MsgDebug(fmt.Sprintf("scale: %v ", scale))
+			log.Debug(fmt.Sprintf("scale: %v ", scale))
 
 			err = image.Resize(scale, vips.KernelAuto)
 			if err != nil {
