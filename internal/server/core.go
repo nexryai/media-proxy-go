@@ -46,8 +46,6 @@ func RequestHandler(w http.ResponseWriter, req *http.Request) {
 		// v13のプロキシ仕様にはないがv12はこれを使う?ため
 		isThumbnail := queryArgs.Get("thumbnail") == "1"
 
-		forceAVIF := queryArgs.Get("avif") == "1"
-
 		if url == "" {
 			http.Error(w, "Bad request", http.StatusBadRequest)
 			return
@@ -102,7 +100,7 @@ func RequestHandler(w http.ResponseWriter, req *http.Request) {
 			useAVIF = false
 		}
 
-		if forceAVIF || useAVIF {
+		if useAVIF {
 			targetFormat = "avif"
 		}
 
@@ -112,7 +110,7 @@ func RequestHandler(w http.ResponseWriter, req *http.Request) {
 			HeightLimit:  heightLimit,
 			IsStatic:     isStatic,
 			TargetFormat: targetFormat,
-			UseAVIF:      useAVIF || forceAVIF,
+			UseAVIF:      useAVIF,
 		}
 
 		// キャッシュが存在しない場合はキューにタスクを投げてキャッシュを作成する
