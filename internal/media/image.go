@@ -27,12 +27,28 @@ func runFfmpeg(opts *ffmpegOpts, cacheId string) error {
 		opts.shouldResize = true
 	}
 
-	if opts.shouldResize {
+	if opts.shouldResize && opts.encoder != "libaom-av1" {
 		ffmpegArgs = append(ffmpegArgs, "-vf", fmt.Sprintf("scale=-2:%d", opts.height))
 	}
 
-	ffmpegArgs = append(ffmpegArgs, "-loop", "0", "-pix_fmt", "yuva420p", "-crf", strconv.Itoa(int(opts.ffmpegCrf)),
-		"-f", opts.targetFormat, GetPathFromCacheId(cacheId))
+	// エンコーダー設定
+	if opts.encoder == "libaom-av1" {
+		ffmpegArgs = append(ffmpegArgs, "-loop", "0", "-crf", strconv.Itoa(int(opts.ffmpegCrf)))
+	} else {
+		ffmpegArgs = append(ffmpegArgs, "-loop", "0", "-pix_fmt", "yuva420p", "-crf", strconv.Itoa(int(opts.ffmpegCrf)))
+	}
+
+	// アルファチャンネルがある場合は抽出して貼り付け（libaomがyuva420p非対応なので）
+	if opts.encoder == "libaom-av1" {
+		if opts.shouldResize {
+			ffmpegArgs = append(ffmpegArgs, "-map", "0", "-map", "0", "-filter:v:0", fmt.Sprintf("scale=-2:%d", opts.height), "-filter:v:1", fmt.Sprintf("alphaextract,scale=-2:%d", opts.height))
+		} else {
+			ffmpegArgs = append(ffmpegArgs, "-map", "0", "-map", "0", "-filter:v:1", "alphaextract")
+		}
+	}
+
+	// フォーマット指定
+	ffmpegArgs = append(ffmpegArgs, "-f", opts.targetFormat, GetPathFromCacheId(cacheId))
 
 	cmd := exec.Command("ffmpeg", ffmpegArgs...)
 	log.Debug(fmt.Sprintf("ffmpeg args: %s", ffmpegArgs))
