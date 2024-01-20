@@ -166,13 +166,6 @@ func RequestHandler(w http.ResponseWriter, req *http.Request) {
 			return
 		}
 
-		_, err = io.Copy(w, file)
-		if err != nil {
-			log.ErrorWithDetail("Failed to write response", err)
-			http.Error(w, "Internal Server Error", http.StatusInternalServerError)
-			return
-		}
-
 		if options.TargetFormat == "avif" {
 			contentType = "image/avif"
 		} else {
@@ -182,5 +175,12 @@ func RequestHandler(w http.ResponseWriter, req *http.Request) {
 		w.Header().Set("Content-Type", contentType)
 		w.Header().Set("CDN-Cache-Control", "max-age=604800")
 		w.Header().Set("Cache-Control", "max-age=432000")
+
+		_, err = io.Copy(w, file)
+		if err != nil {
+			log.ErrorWithDetail("Failed to write response", err)
+			http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+			return
+		}
 	}
 }
