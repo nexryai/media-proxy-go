@@ -79,7 +79,7 @@ func main() {
 		log.Warn("@@>>>>> Debug mode is enabled!!! NEVER use this in a production environment!! Debugging endpoints can leak sensitive information!!!!! <<<<<@@")
 	}
 
-	setDefaultEnv("REDIS_ADDR", "redis:6379")
+	setDefaultEnv("REDIS_ADDR", "127.0.0.1:6379")
 	setDefaultEnv("CACHE_DIR", "/tmp/debug")
 
 	// vipsの初期化
