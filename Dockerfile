@@ -1,26 +1,26 @@
-FROM golang:alpine as builder
+FROM golang:1.21-bookworm as builder
 WORKDIR /build
 
 COPY . ./
 
-RUN sed -i 's#https\?://dl-cdn.alpinelinux.org/alpine#https://mirrors.xtom.com.hk/alpine#g' /etc/apk/repositories \
- && apk add --no-cache ca-certificates git alpine-sdk g++ build-base cmake clang libressl-dev vips vips-cpp vips-dev vips-heif \
+RUN apt update -y && apt install -y libvips libvips-dev libde265-0 libde265-dev \
  && go build -ldflags="-s -w" -trimpath -o mediaproxy main.go
 
-FROM alpine:3.19
+FROM debian:bookworm-slim
 
 COPY --from=builder /build/mediaproxy /app/mediaproxy
 
-RUN sed -i 's#https\?://dl-cdn.alpinelinux.org/alpine#https://mirrors.xtom.com.hk/alpine#g' /etc/apk/repositories \
- && apk add --no-cache ca-certificates tini vips vips-heif ffmpeg \
- && addgroup -g 981 app \
- && adduser -u 981 -G app -D -h /app app \
+RUN apt update -y \
+ && apt install -y tini libvips libde265-0 libjemalloc2 ffmpeg \
+ && groupadd -g 981 app \
+ && useradd -d /app -s /bin/sh -u 981 -g app app \
  && chown -R app:app /app \
  && chmod +x /app/mediaproxy \
- && mkdir /cache \
+ && mkdir -p /cache \
  && chown -R app:app /cache
 
-USER app
-ENV CACHE_DIR=/cache
 
+USER app
+
+ENV LD_PRELOAD=/usr/lib/x86_64-linux-gnu/libjemalloc.so.2
 CMD ["tini", "--", "/app/mediaproxy"]
