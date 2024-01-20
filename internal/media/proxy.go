@@ -83,10 +83,18 @@ func ProxyImage(opts *ProxyRequest) (string, string, error) {
 		cacheId, err := resizeWithFfmpeg(encodeOpts)
 
 		if err != nil {
-			log.Warn(fmt.Sprintf("Failed to decode image: %v", err))
-			return "", contentType, fmt.Errorf("failed to decode image")
+			log.Warn(fmt.Sprintf("Failed to resize image: %v", err))
+
+			// 失敗したならFAILEDをキャッシュする
+			err = StoreCachePath(opts, "FAILED")
+			if err != nil {
+				log.ErrorWithDetail("Failed to store error status", err)
+				return "", contentType, fmt.Errorf("failed to store error status")
+			}
+
+			return "", contentType, fmt.Errorf("failed to resize image")
 		} else {
-			log.Debug("Decode ok.")
+			log.Debug("ok.")
 		}
 
 		contentType = fmt.Sprintf("image/%s", encodeOpts.targetFormat)
@@ -101,7 +109,15 @@ func ProxyImage(opts *ProxyRequest) (string, string, error) {
 
 	}
 
-	//どれにも当てはまらない
+	// 画像ではない
 	log.Debug(contentType + " is not supported")
+
+	// FAILEDをキャッシュする
+	err = StoreCachePath(opts, "FAILED")
+	if err != nil {
+		log.ErrorWithDetail("Failed to store error status", err)
+		return "", contentType, fmt.Errorf("failed to store error status")
+	}
+
 	return "", contentType, fmt.Errorf("invalid file format")
 }

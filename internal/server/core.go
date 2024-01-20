@@ -128,7 +128,7 @@ func RequestHandler(w http.ResponseWriter, req *http.Request) {
 				return
 			}
 
-			_, err = client.Enqueue(task, asynq.MaxRetry(1), asynq.Timeout(15*time.Second))
+			_, err = client.Enqueue(task, asynq.MaxRetry(0), asynq.Timeout(15*time.Second))
 			if err != nil {
 				log.ErrorWithDetail("Failed to enqueue task", err)
 			}
@@ -151,6 +151,15 @@ func RequestHandler(w http.ResponseWriter, req *http.Request) {
 
 		log.Debug("Streaming from cache")
 		cachePath, err := media.GetCachePath(options)
+		if err != nil {
+			log.ErrorWithDetail("Failed to get cache path", err)
+			http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+			return
+		} else if cachePath == "FAILED" {
+			log.Error("Failed to resize image")
+			http.Error(w, "Failed to resize image: invalid image?", http.StatusBadRequest)
+			return
+		}
 
 		file, err := os.Open(cachePath)
 		if err != nil {

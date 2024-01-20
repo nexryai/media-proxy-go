@@ -24,6 +24,10 @@ func connectToRedis() *redis.Client {
 
 // キャッシュIDから実際のパスに変換する
 func GetPathFromCacheId(id string) string {
+	if id == "FAILED" {
+		return "FAILED"
+	}
+
 	return os.Getenv("CACHE_DIR") + "/" + id
 }
 
