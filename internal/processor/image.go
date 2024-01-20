@@ -4,13 +4,12 @@ import (
 	"git.sda1.net/media-proxy-go/internal/queue"
 	"github.com/hibiken/asynq"
 	"log"
+	"os"
 )
-
-const redisAddr = "127.0.0.1:6379"
 
 func ProxyQueueProcessor() {
 	srv := asynq.NewServer(
-		asynq.RedisClientOpt{Addr: redisAddr},
+		asynq.RedisClientOpt{Addr: os.Getenv("REDIS_ADDR")},
 		asynq.Config{
 			// Specify how many concurrent workers to use
 			Concurrency: 10,

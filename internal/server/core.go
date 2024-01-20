@@ -14,8 +14,6 @@ import (
 	"time"
 )
 
-const redisAddr = "127.0.0.1:6379"
-
 func RequestHandler(w http.ResponseWriter, req *http.Request) {
 	log := logger.GetLogger("Server")
 	path := req.URL.Path
@@ -116,7 +114,7 @@ func RequestHandler(w http.ResponseWriter, req *http.Request) {
 		// キャッシュが存在しない場合はキューにタスクを投げてキャッシュを作成する
 		if !media.CacheExists(options) {
 			log.Debug("Cache not found. Waiting for cache to be created")
-			client := asynq.NewClient(asynq.RedisClientOpt{Addr: redisAddr})
+			client := asynq.NewClient(asynq.RedisClientOpt{Addr: os.Getenv("REDIS_ADDR")})
 			defer client.Close()
 
 			task, err := queue.NewProxyRequestTask(options)

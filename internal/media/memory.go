@@ -36,7 +36,7 @@ func stringToTime(s string) time.Time {
 
 func connectToRedis() *redis.Client {
 	client := redis.NewClient(&redis.Options{
-		Addr: fmt.Sprintf("%s:%d", "127.0.0.1", 6379),
+		Addr: os.Getenv("REDIS_ADDR"),
 	})
 
 	return client

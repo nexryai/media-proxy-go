@@ -14,6 +14,17 @@ import (
 	"strconv"
 )
 
+func setDefaultEnv(key string, value string) {
+	if os.Getenv(key) == "" {
+		err := os.Setenv(key, value)
+		if err != nil {
+			log := logger.GetLogger("EnvInit")
+			log.ErrorWithDetail("Failed to set default "+key, err)
+			os.Exit(1)
+		}
+	}
+}
+
 func createServer(port int, log visualog.Logger) {
 	log.ProgressInfo("Starting server ...")
 
@@ -68,9 +79,8 @@ func main() {
 		log.Warn("@@>>>>> Debug mode is enabled!!! NEVER use this in a production environment!! Debugging endpoints can leak sensitive information!!!!! <<<<<@@")
 	}
 
-	if os.Getenv("CACHE_DIR") == "" {
-		os.Setenv("CACHE_DIR", "/tmp/debug")
-	}
+	setDefaultEnv("REDIS_ADDR", "redis:6379")
+	setDefaultEnv("CACHE_DIR", "/tmp/debug")
 
 	// vipsの初期化
 	log.ProgressInfo("Initializing vips ...")
