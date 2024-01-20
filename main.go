@@ -5,6 +5,7 @@ import (
 	"git.sda1.net/media-proxy-go/internal/core"
 	"git.sda1.net/media-proxy-go/internal/logger"
 	"git.sda1.net/media-proxy-go/internal/processor"
+	"git.sda1.net/media-proxy-go/internal/purger"
 	"git.sda1.net/media-proxy-go/internal/server"
 	"github.com/davidbyttow/govips/v2/vips"
 	"github.com/nexryai/visualog"
@@ -26,6 +27,12 @@ func createServer(port int, log visualog.Logger) {
 	log.ProgressInfo("Starting queue processor ...")
 	go func() {
 		processor.ProxyQueueProcessor()
+	}()
+	log.ProgressOk()
+
+	log.ProgressInfo("Starting lifecycle manager ...")
+	go func() {
+		purger.StartLifecycleManager()
 	}()
 	log.ProgressOk()
 
