@@ -160,12 +160,6 @@ func RequestHandler(w http.ResponseWriter, req *http.Request) {
 		}
 		defer file.Close()
 
-		if err != nil {
-			log.ErrorWithDetail("Failed to get cache path", err)
-			http.Error(w, "Internal Server Error", http.StatusInternalServerError)
-			return
-		}
-
 		if options.TargetFormat == "avif" {
 			contentType = "image/avif"
 		} else {
