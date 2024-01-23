@@ -35,7 +35,6 @@ Docker Hub に一応ビルド済みイメージを上げています。
 services:
   app:
     image: docker.io/nexryai/mediaproxy-go:latest
-    #network_mode: host
     restart: always
     environment:
       - REDIS_ADDR=redis:6379

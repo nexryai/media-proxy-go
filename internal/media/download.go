@@ -17,8 +17,8 @@ func fetchImage(url string) (*[]byte, string, error) {
 	log := logger.GetLogger("MediaService")
 	log.Debug(fmt.Sprintf("Download image: %s", url))
 
-	// 現状では6MBに制限しているが変えられるようにするべきかも
-	maxSize := int64(6 * 1024 * 1024)
+	// 6.6MBのカスタム絵文字が存在するので
+	maxSize := int64(10 * 1024 * 1024)
 
 	resp, err := downloadFile(url, maxSize)
 	if err != nil {
