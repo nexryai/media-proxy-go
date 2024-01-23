@@ -47,7 +47,7 @@ func isAnimatedFormat(contentType string, fetchedImage *[]byte) bool {
 func ProxyImage(opts *ProxyRequest) (string, string, error) {
 	log := logger.GetLogger("MediaService")
 
-	// どこかでoptsが変わるとキャッシュキーがー狂って困る
+	// どこかでoptsが変わるとキャッシュキーが狂って困る
 	var originalOpts ProxyRequest
 	originalOpts = *opts
 

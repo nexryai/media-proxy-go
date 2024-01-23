@@ -123,8 +123,8 @@ func CleanCache() {
 
 			kvStore.Del(ctx, cacheStoreKey)
 			kvStore.Del(ctx, key)
-		} else if time.Since(lastUsedTime).Minutes() > 20 && cachePath == "FAILED" {
-			// 20分以上使われていないFAILEDキャッシュを削除する
+		} else if time.Since(lastUsedTime).Minutes() > 1 && cachePath == "FAILED" {
+			// 1分以上使われていないFAILEDキャッシュを削除する
 			log.Info(fmt.Sprintf("Removing FAILED cache: %s", cacheStoreKey))
 
 			kvStore.Del(ctx, cacheStoreKey)

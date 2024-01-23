@@ -16,8 +16,11 @@ RUN sed -i 's#https\?://dl-cdn.alpinelinux.org/alpine#https://mirrors.xtom.com.h
  && addgroup -g 981 app \
  && adduser -u 981 -G app -D -h /app app \
  && chown -R app:app /app \
- && chmod +x /app/mediaproxy
+ && chmod +x /app/mediaproxy \
+ && mkdir /cache \
+ && chown -R app:app /cache
 
 USER app
+ENV CACHE_DIR=/cache
 
 CMD ["tini", "--", "/app/mediaproxy"]
