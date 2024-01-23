@@ -47,6 +47,10 @@ func isAnimatedFormat(contentType string, fetchedImage *[]byte) bool {
 func ProxyImage(opts *ProxyRequest) (string, string, error) {
 	log := logger.GetLogger("MediaService")
 
+	// どこかでoptsが変わるとキャッシュキーがー狂って困る
+	var originalOpts ProxyRequest
+	originalOpts = *opts
+
 	imageBufferPtr, contentType, err := fetchImage(opts.Url)
 	if err != nil {
 		log.ErrorWithDetail("Failed to download image", err)
@@ -89,7 +93,7 @@ func ProxyImage(opts *ProxyRequest) (string, string, error) {
 			log.Warn(fmt.Sprintf("Failed to resize image: %v", err))
 
 			// 失敗したならFAILEDをキャッシュする
-			err = StoreCachePath(opts, "FAILED")
+			err = StoreCachePath(&originalOpts, "FAILED")
 			if err != nil {
 				log.ErrorWithDetail("Failed to store error status", err)
 				return "", contentType, fmt.Errorf("failed to store error status")
@@ -104,7 +108,7 @@ func ProxyImage(opts *ProxyRequest) (string, string, error) {
 		file, err := os.Create(GetPathFromCacheId(cacheId))
 		if err != nil {
 			log.ErrorWithDetail("Failed to create file", err)
-			_ = StoreCachePath(opts, "FAILED")
+			_ = StoreCachePath(&originalOpts, "FAILED")
 			return "", contentType, fmt.Errorf("failed to create file")
 		}
 
@@ -113,12 +117,12 @@ func ProxyImage(opts *ProxyRequest) (string, string, error) {
 		_, err = file.Write(*convertedImageBuffer)
 		if err != nil {
 			log.ErrorWithDetail("Failed to write image", err)
-			_ = StoreCachePath(opts, "FAILED")
+			_ = StoreCachePath(&originalOpts, "FAILED")
 			return "", contentType, fmt.Errorf("failed to write image")
 		}
 
 		contentType = fmt.Sprintf("image/%s", encodeOpts.targetFormat)
-		err = StoreCachePath(opts, cacheId)
+		err = StoreCachePath(&originalOpts, cacheId)
 		if err != nil {
 			log.ErrorWithDetail("Failed to store cache path", err)
 			return "", contentType, fmt.Errorf("failed to store cache path")
@@ -132,7 +136,7 @@ func ProxyImage(opts *ProxyRequest) (string, string, error) {
 	log.Debug(contentType + " is not supported")
 
 	// FAILEDをキャッシュする
-	err = StoreCachePath(opts, "FAILED")
+	err = StoreCachePath(&originalOpts, "FAILED")
 	if err != nil {
 		log.ErrorWithDetail("Failed to store error status", err)
 		return "", contentType, fmt.Errorf("failed to store error status")
