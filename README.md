@@ -5,19 +5,17 @@ MisskeyのMediaProxyとして使える、Goで書かれた~~軽量なMediaProxy~
 
 ### 依存関係
  - libvips
- - ffmpeg
 
 #### ビルド依存関係
  - libvips-dev
  - Go (**バージョン1.18以上**)
 
 ### 仕組み
-本家のMediaProxyとは異なり、リクエストを一回ジョブキューにぶち込みffmpegを使用してエンコードしてストレージに書き込んでから応答するようにしています。  
+本家のMediaProxyとは異なり、リクエストを一回ジョブキューにぶち込みダウンロードしてリサイズ圧縮してストレージに書き込んでから応答するようにしています。  
 ジョブキューを使用することで同時実行数やタイムアウトを厳格に設定できるようになり、永続キャッシュの導入によりストレージを消費する代わりに高速な応答が可能となりました。  
 キャッシュは72時間使用されないと消し飛ばされます。
 
 #### ロードマップ
- - [x] ffmpegを使ってエンコードする
  - [x] ジョブキューを使う
  - [x] 永続キャッシュを導入する
  - [x] キャッシュの自動消し飛ばし
@@ -34,13 +32,32 @@ Jemallocを使ってください
 #### docker-composeで動かす
 Docker Hub に一応ビルド済みイメージを上げています。
 ```
-version: '3'
 services:
   app:
     image: docker.io/nexryai/mediaproxy-go:latest
-    ports:
-      - 127.0.0.1:9090:8080
+    #network_mode: host
     restart: always
+    environment:
+      - REDIS_ADDR=redis:6379
+      - CACHE_DIR=/cache
+    volumes:
+      - proxy_cache:/cache
+    ports:
+      - 127.0.0.1:8080:8080
+    depends_on:
+      - redis
+
+  redis:
+    image: "redis:alpine"
+    volumes:
+      - redis_data:/data
+
+volumes:
+  proxy_cache:
+    external: false
+
+  redis_data:
+    external: false
 ```
 
 #### 制限
