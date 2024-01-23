@@ -35,5 +35,7 @@ func HandleImageProxyTask(ctx context.Context, t *asynq.Task) error {
 
 	log.Info("Processing image proxy task: " + payload.Request.Url)
 	_, _, err := media.ProxyImage(payload.Request)
+
+	//vips.ShutdownThread()
 	return err
 }

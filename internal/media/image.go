@@ -1,93 +1,16 @@
 package media
 
 import (
-	"bytes"
 	"fmt"
-	"git.sda1.net/media-proxy-go/internal/core"
 	"git.sda1.net/media-proxy-go/internal/logger"
 	"github.com/davidbyttow/govips/v2/vips"
-	"github.com/google/uuid"
 	"math"
-	"os"
-	"os/exec"
-	"strconv"
 )
 
-func runFfmpeg(opts *ffmpegOpts, cacheId string) error {
-	log := logger.GetLogger("ffmpeg")
+func convertAndResizeImage(opts *transcodeImageOpts) (*[]byte, error) {
+	defer vips.ShutdownThread()
 
-	ffmpegArgs := []string{"-i", "pipe:0"}
-
-	// 奇数だとエラーになるので偶数にする
-	if opts.height%2 != 0 {
-		opts.height -= 1
-		opts.shouldResize = true
-	} else if opts.width%2 != 0 {
-		// オプションに奇数を指定しなくても元画像の幅が奇数かつリサイズ無しでプロキシしようとするとエラーになるっぽい
-		opts.shouldResize = true
-	}
-
-	if opts.shouldResize && opts.encoder != "libaom-av1" {
-		ffmpegArgs = append(ffmpegArgs, "-vf", fmt.Sprintf("scale=-2:%d", opts.height))
-	}
-
-	// エンコーダー設定
-	if opts.encoder == "libaom-av1" {
-		ffmpegArgs = append(ffmpegArgs, "-loop", "0", "-crf", strconv.Itoa(int(opts.ffmpegCrf)))
-	} else {
-		ffmpegArgs = append(ffmpegArgs, "-loop", "0", "-pix_fmt", "yuva420p", "-crf", strconv.Itoa(int(opts.ffmpegCrf)))
-	}
-
-	// アルファチャンネルがある場合は抽出して貼り付け（libaomがyuva420p非対応なので）
-	if opts.encoder == "libaom-av1" {
-		if opts.shouldResize {
-			ffmpegArgs = append(ffmpegArgs, "-map", "0", "-map", "0", "-filter:v:0", fmt.Sprintf("scale=-2:%d", opts.height), "-filter:v:1", fmt.Sprintf("alphaextract,scale=-2:%d", opts.height))
-		} else {
-			ffmpegArgs = append(ffmpegArgs, "-map", "0", "-map", "0", "-filter:v:1", "alphaextract")
-		}
-	}
-
-	// フォーマット指定
-	ffmpegArgs = append(ffmpegArgs, "-f", opts.targetFormat, GetPathFromCacheId(cacheId))
-
-	cmd := exec.Command("ffmpeg", ffmpegArgs...)
-	log.Debug(fmt.Sprintf("ffmpeg args: %s", ffmpegArgs))
-
-	// パイプ周り
-	var stdoutBuffer bytes.Buffer
-	cmd.Stdout = &stdoutBuffer
-
-	if core.IsDebugMode() {
-		cmd.Stderr = os.Stderr
-	}
-
-	stdin, err := cmd.StdinPipe()
-	if err != nil {
-		return err
-	}
-	defer stdin.Close()
-
-	if err := cmd.Start(); err != nil {
-		return fmt.Errorf("failed to start command: %v", err)
-	}
-
-	_, err = stdin.Write(*opts.imageBufferPtr)
-	if err != nil {
-		return fmt.Errorf("error writing to stdin: %v", err)
-	}
-	stdin.Close()
-
-	// 終了を待機
-	if err := cmd.Wait(); err != nil {
-		return fmt.Errorf("command execution error: %v", err)
-	}
-
-	return nil
-}
-
-func resizeWithFfmpeg(opts *transcodeImageOpts) (string, error) {
 	log := logger.GetLogger("MediaService")
-	cacheId := uuid.NewString()
 
 	var image *vips.ImageRef
 	var err error
@@ -98,7 +21,7 @@ func resizeWithFfmpeg(opts *transcodeImageOpts) (string, error) {
 
 	// バッファーから読み込み
 	if err != nil {
-		return "", fmt.Errorf("failed to load image: %v", err)
+		return nil, fmt.Errorf("failed to load image: %v", err)
 	}
 
 	defer image.Close()
@@ -123,75 +46,135 @@ func resizeWithFfmpeg(opts *transcodeImageOpts) (string, error) {
 	log.Debug(fmt.Sprintf("w: %d h: %d", width, height))
 
 	if width > 5120 || height > 5120 {
-		return "", fmt.Errorf("too large image")
+		return nil, fmt.Errorf("too large image")
 	}
 
 	// リサイズ系処理
+	var scale float64
 	var shouldResize bool
+
 	if width > opts.widthLimit || height > opts.heightLimit {
 		shouldResize = true
 	}
 
-	// リサイズ系処理
-	newWidth := width
-	newHeight := height
+	if opts.isAnimated {
+		log.Debug("Encode as animated image!")
 
-	if shouldResize {
-		// 縦横比率を計算
-		aspectRatio := float64(width) / float64(height)
+		// リサイズ系処理（animated）
+		newWidth := width
+		newHeight := height
 
-		// 超過量を算出
-		widthExcess := width - opts.widthLimit
-		heightExcess := height - opts.heightLimit
+		if shouldResize {
 
-		// widthLimitとheightLimitが両方超過してる場合、超過している部分が少ない方のlimitは0にして比率を維持する
-		if opts.widthLimit != 0 && opts.heightLimit != 0 {
-			if width > opts.widthLimit && height > opts.heightLimit {
-				if widthExcess < heightExcess {
-					opts.widthLimit = 0
-				} else {
-					opts.heightLimit = 0
+			// 縦横比率を計算
+			aspectRatio := float64(width) / float64(height)
+
+			// 超過量を算出
+			widthExcess := width - opts.widthLimit
+			heightExcess := height - opts.heightLimit
+
+			// widthLimitとheightLimitが両方超過してる場合、超過している部分が少ない方のlimitは0にして比率を維持する
+			if opts.widthLimit != 0 && opts.heightLimit != 0 {
+				if width > opts.widthLimit && height > opts.heightLimit {
+					if widthExcess < heightExcess {
+						opts.widthLimit = 0
+					} else {
+						opts.heightLimit = 0
+					}
 				}
 			}
+
+			if opts.widthLimit != 0 {
+				if width > opts.widthLimit {
+					newWidth = opts.widthLimit
+					newHeight = int(math.Round(float64(newWidth) / aspectRatio))
+				}
+			} else if opts.heightLimit != 0 {
+				if height > opts.heightLimit {
+					newHeight = opts.heightLimit
+					newWidth = int(math.Round(float64(newHeight) * aspectRatio))
+				}
+			}
+
+			log.Debug(fmt.Sprintf("newWidth: %d newHeight: %d aspectRatio: %v", newWidth, newHeight, aspectRatio))
 		}
 
-		if opts.widthLimit != 0 {
-			if width > opts.widthLimit {
-				newWidth = opts.widthLimit
-				newHeight = int(math.Round(float64(newWidth) / aspectRatio))
-			}
-		} else if opts.heightLimit != 0 {
-			if height > opts.heightLimit {
-				newHeight = opts.heightLimit
-				newWidth = int(math.Round(float64(newHeight) * aspectRatio))
-			}
+		var convertedData *[]byte
+
+		err := image.ThumbnailWithSize(newWidth, newHeight, vips.InterestingAll, vips.SizeDown)
+		if err != nil {
+			return nil, err
 		}
 
-		log.Debug(fmt.Sprintf("newWidth: %d newHeight: %d aspectRatio: %v", newWidth, newHeight, aspectRatio))
-	}
+		// WebP形式に変換
+		encodeOpts := vips.WebpExportParams{
+			Quality:  70,
+			Lossless: false, // Set to true for lossless compression
+		}
 
-	// 変換後の画像データを取得
-	ffmpegOption := &ffmpegOpts{
-		imageBufferPtr: opts.imageBufferPtr,
-		shouldResize:   shouldResize,
-		width:          newWidth,
-		height:         newHeight,
-	}
+		// 変換後の画像データを取得
+		convertedDataBuffer, _, err := image.ExportWebp(&encodeOpts)
+		if err != nil {
+			return nil, err
+		}
 
-	if opts.targetFormat == "avif" {
-		ffmpegOption.targetFormat = "avif"
-		ffmpegOption.encoder = "libaom-av1"
-		ffmpegOption.ffmpegCrf = 40
+		convertedData = &convertedDataBuffer
+		return convertedData, nil
+
 	} else {
-		ffmpegOption.targetFormat = "webp"
-		ffmpegOption.encoder = "libwebp"
-		ffmpegOption.ffmpegCrf = 70
+		log.Debug("Encode as static image!")
+
+		// 画像をリサイズ
+		if shouldResize && !opts.isAnimated {
+			// 超過が大きい方に合わせる
+			widthExcess := width - opts.widthLimit
+			heightExcess := height - opts.heightLimit
+
+			if widthExcess < heightExcess {
+				scale = float64(opts.heightLimit) / float64(height)
+			} else {
+				scale = float64(opts.widthLimit) / float64(width)
+			}
+
+			log.Debug(fmt.Sprintf("scale: %v ", scale))
+
+			err = image.Resize(scale, vips.KernelAuto)
+			if err != nil {
+				return nil, err
+			}
+		}
+
+		if opts.targetFormat == "avif" {
+			// AVIF形式に変換
+			encodeOpts := vips.AvifExportParams{
+				Quality:  65,
+				Effort:   1,
+				Lossless: false,
+			}
+
+			// 変換後の画像データを取得
+			convertedData, _, err := image.ExportAvif(&encodeOpts)
+			if err != nil {
+				return nil, err
+			}
+
+			return &convertedData, nil
+		}
+
+		// WebP形式に変換
+		encodeOpts := vips.WebpExportParams{
+			Quality:  70,
+			Lossless: false,
+		}
+
+		// 変換後の画像データを取得
+		convertedData, _, err := image.ExportWebp(&encodeOpts)
+		if err != nil {
+			return nil, err
+		}
+
+		return &convertedData, nil
+
 	}
 
-	err = runFfmpeg(ffmpegOption, cacheId)
-	if err != nil {
-		return "", err
-	}
-
-	return cacheId, nil
 }

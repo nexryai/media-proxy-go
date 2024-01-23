@@ -3,6 +3,8 @@ package media
 import (
 	"fmt"
 	"git.sda1.net/media-proxy-go/internal/logger"
+	"github.com/google/uuid"
+	"os"
 )
 
 // trueであればImageMagickによって処理される。そうでなければそのままプロキシされる
@@ -80,7 +82,8 @@ func ProxyImage(opts *ProxyRequest) (string, string, error) {
 		}
 
 		// isAnimatedがTrueなら1フレームずつ処理する。!isAnimatedでアニメーション画像をプロキシすると最初の1フレームだけ返ってくる
-		cacheId, err := resizeWithFfmpeg(encodeOpts)
+		convertedImageBuffer, err := convertAndResizeImage(encodeOpts)
+		cacheId := uuid.NewString()
 
 		if err != nil {
 			log.Warn(fmt.Sprintf("Failed to resize image: %v", err))
@@ -97,8 +100,24 @@ func ProxyImage(opts *ProxyRequest) (string, string, error) {
 			log.Debug("ok.")
 		}
 
-		contentType = fmt.Sprintf("image/%s", encodeOpts.targetFormat)
+		// ディスクに保存
+		file, err := os.Create(GetPathFromCacheId(cacheId))
+		if err != nil {
+			log.ErrorWithDetail("Failed to create file", err)
+			_ = StoreCachePath(opts, "FAILED")
+			return "", contentType, fmt.Errorf("failed to create file")
+		}
 
+		defer file.Close()
+
+		_, err = file.Write(*convertedImageBuffer)
+		if err != nil {
+			log.ErrorWithDetail("Failed to write image", err)
+			_ = StoreCachePath(opts, "FAILED")
+			return "", contentType, fmt.Errorf("failed to write image")
+		}
+
+		contentType = fmt.Sprintf("image/%s", encodeOpts.targetFormat)
 		err = StoreCachePath(opts, cacheId)
 		if err != nil {
 			log.ErrorWithDetail("Failed to store cache path", err)
