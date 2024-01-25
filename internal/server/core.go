@@ -133,7 +133,8 @@ func RequestHandler(w http.ResponseWriter, req *http.Request) {
 			i := 0
 			for {
 				i += 1
-				time.Sleep(1 * time.Second)
+				// 0.5秒
+				time.Sleep(500 * time.Millisecond)
 				if media.CacheExists(options) {
 					log.Debug("Cache created!")
 					break
