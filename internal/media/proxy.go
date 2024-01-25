@@ -13,15 +13,13 @@ func isConvertible(contentType string, fetchedImage *[]byte) bool {
 	case "image/avif":
 		return true
 	case "image/ico":
-		// 現状icoをデコードできないのでfalseを返してデコードせずそのままプロキシするようにする
-		return false
+		return true
 	case "image/jpeg":
 		return true
 	case "image/heif":
 		return true
 	case "image/png":
-		// apng無理。滅びろ。お前に人権はない。
-		return !isAnimatedPNG(fetchedImage)
+		return true
 	case "image/webp":
 		return true
 	case "image/gif":

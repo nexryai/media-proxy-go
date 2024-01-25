@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"git.sda1.net/media-proxy-go/internal/logger"
 	"github.com/davidbyttow/govips/v2/vips"
+	"github.com/nexryai/apng2webp"
 	"math"
 )
 
@@ -29,6 +30,23 @@ func convertAndResizeImage(opts *transcodeImageOpts) (*[]byte, error) {
 	// 画像サイズを取得
 	var width int
 	var height int
+
+	// apng対策
+	if isAnimatedPNG(opts.imageBufferPtr) {
+		log.Debug("Animated PNG detected!")
+		width = image.Width()
+		height = image.Height()
+
+		opts.targetFormat = "webp"
+
+		// apng2webpをいつかリサイズ対応させる
+		result, err := apng2webp.Convert(opts.imageBufferPtr, width, height)
+		if err != nil {
+			return nil, err
+		}
+
+		return result, nil
+	}
 
 	if opts.isAnimated {
 		numFrames := image.Pages()

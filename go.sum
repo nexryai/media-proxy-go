@@ -23,6 +23,12 @@ github.com/hibiken/asynq v0.24.1/go.mod h1:u5qVeSbrnfT+vtG5Mq8ZPzQu/BmCKMHvTGb91
 github.com/kr/pretty v0.1.0/go.mod h1:dAy3ld7l9f0ibDNOQOHHMYYIIbhfbHSm3C4ZsoJORNo=
 github.com/kr/pty v1.1.1/go.mod h1:pFQYn66WHrOpPYNljwOMqo10TkYh1fy3cYio2l3bCsQ=
 github.com/kr/text v0.1.0/go.mod h1:4Jbv+DJW3UT/LiOwJeYQe1efqtUx/iVham/4vfdArNI=
+github.com/nexryai/apng v0.0.3 h1:C2dcE1L+3FhRyjOnZQveCoiHvIagabesJUpBqZGbw6E=
+github.com/nexryai/apng v0.0.3/go.mod h1:AYSOoTIs+2cJPM6qxPvetUwZpNdQLfM9YN9EPL6puW0=
+github.com/nexryai/apng2webp v0.0.0-20240125113215-d50221eb7695 h1:wdHcHbseJw9zG6cQ5FSKZ4Mn69X/RbVvD/kxwJDxaqo=
+github.com/nexryai/apng2webp v0.0.0-20240125113215-d50221eb7695/go.mod h1:8nLd+gVVpag3t4v3kMlcYhxtT3o7wsbAymzRDrV3cWg=
+github.com/nexryai/apng2webp v0.0.0-20240125113937-b6ca8bce3868 h1:sF0qwQv/HB/nXnL9PI6AdlOJLUzboJxEkAAWMLj4PUM=
+github.com/nexryai/apng2webp v0.0.0-20240125113937-b6ca8bce3868/go.mod h1:8nLd+gVVpag3t4v3kMlcYhxtT3o7wsbAymzRDrV3cWg=
 github.com/nexryai/archer v0.0.1 h1:vKtJzt7j+enma8CH7QZsmd1tUZ3tK5ZOkXZ3glDrJGc=
 github.com/nexryai/archer v0.0.1/go.mod h1:cjBXUP/oxPpm8JMiZW5GPpzC6s+ZmaVPxTxrxw+zxJM=
 github.com/nexryai/visualog v0.0.1 h1:TV+PFzRHUDS6NTtL0Jb39bVQxqDSgPHNciWA0m+CAvE=

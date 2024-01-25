@@ -13,6 +13,8 @@ require (
 	github.com/golang/protobuf v1.5.2 // indirect
 	github.com/google/uuid v1.2.0 // indirect
 	github.com/hibiken/asynq v0.24.1 // indirect
+	github.com/nexryai/apng v0.0.3 // indirect
+	github.com/nexryai/apng2webp v0.0.0-20240125113937-b6ca8bce3868 // indirect
 	github.com/nexryai/archer v0.0.1 // indirect
 	github.com/nexryai/visualog v0.0.1 // indirect
 	github.com/redis/go-redis/v9 v9.0.3 // indirect
