@@ -1,10 +1,13 @@
 package media
 
 import (
+	"bytes"
 	"fmt"
 	"git.sda1.net/media-proxy-go/internal/logger"
 	"github.com/davidbyttow/govips/v2/vips"
 	"github.com/nexryai/apng2webp"
+	"github.com/ur65/go-ico"
+	"image/png"
 	"math"
 )
 
@@ -22,7 +25,27 @@ func convertAndResizeImage(opts *transcodeImageOpts) (*[]byte, error) {
 
 	// バッファーから読み込み
 	if err != nil {
-		return nil, fmt.Errorf("failed to load image: %v", err)
+		if opts.originalFormat == "image/x-icon" || opts.originalFormat == "image/ico" {
+			log.Debug("image/x-icon detected!")
+
+			img, err := ico.Decode(bytes.NewReader(*opts.imageBufferPtr))
+			if err != nil {
+				return nil, err
+			}
+
+			buf := new(bytes.Buffer)
+
+			// vipsがimage.Imageを直接受け取れないので一旦pngに変換
+			log.Debug("Encode as PNG!")
+			err = png.Encode(buf, img[0])
+			if err != nil {
+				return nil, err
+			}
+
+			image, err = vips.NewImageFromBuffer(buf.Bytes())
+		} else {
+			return nil, fmt.Errorf("failed to load image: %v", err)
+		}
 	}
 
 	defer image.Close()

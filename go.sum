@@ -23,6 +23,8 @@ github.com/hibiken/asynq v0.24.1/go.mod h1:u5qVeSbrnfT+vtG5Mq8ZPzQu/BmCKMHvTGb91
 github.com/kr/pretty v0.1.0/go.mod h1:dAy3ld7l9f0ibDNOQOHHMYYIIbhfbHSm3C4ZsoJORNo=
 github.com/kr/pty v1.1.1/go.mod h1:pFQYn66WHrOpPYNljwOMqo10TkYh1fy3cYio2l3bCsQ=
 github.com/kr/text v0.1.0/go.mod h1:4Jbv+DJW3UT/LiOwJeYQe1efqtUx/iVham/4vfdArNI=
+github.com/mat/besticon v0.0.0-20231103204413-ee089084f347 h1:FSfjh3/9PRsWzjCDdNYLsXeCz5S3D2/iwK/8lnzOu2U=
+github.com/mat/besticon v0.0.0-20231103204413-ee089084f347/go.mod h1:bzMBPMkFE6oCncbLySBPWc4XB5AuglYIkqKL/j9vp3c=
 github.com/nexryai/apng v0.0.3 h1:C2dcE1L+3FhRyjOnZQveCoiHvIagabesJUpBqZGbw6E=
 github.com/nexryai/apng v0.0.3/go.mod h1:AYSOoTIs+2cJPM6qxPvetUwZpNdQLfM9YN9EPL6puW0=
 github.com/nexryai/apng2webp v0.0.0-20240125113215-d50221eb7695 h1:wdHcHbseJw9zG6cQ5FSKZ4Mn69X/RbVvD/kxwJDxaqo=
@@ -50,6 +52,8 @@ github.com/stretchr/testify v1.7.0/go.mod h1:6Fq8oRcR53rry900zMqJjRRixrwX3KX962/
 github.com/stretchr/testify v1.7.1/go.mod h1:6Fq8oRcR53rry900zMqJjRRixrwX3KX962/h/Wwjteg=
 github.com/stretchr/testify v1.8.0 h1:pSgiaMZlXftHpm5L7V1+rVB+AZJydKsMxsQBIJw4PKk=
 github.com/stretchr/testify v1.8.0/go.mod h1:yNjHg4UonilssWZ8iaSj1OCr/vHnekPRkoO+kdMU+MU=
+github.com/ur65/go-ico v1.0.3 h1:NTKAvR8WpsBZ6AgPQwQ2cv1SU2qG+Jjc5mpUDUll6Kw=
+github.com/ur65/go-ico v1.0.3/go.mod h1:etIkLsAcEEKzubhLcDmbDtKXwXCooUceb37boTcaTwo=
 github.com/yuin/goldmark v1.3.5/go.mod h1:mwnBkeHKe2W/ZEtQ+71ViKU8L12m81fl3OWwC1Zlc8k=
 github.com/yuin/goldmark v1.4.13/go.mod h1:6yULJ656Px+3vBD8DxQVa3kxgyrAnzto9xy5taEt/CY=
 go.uber.org/goleak v1.1.12/go.mod h1:cwTWslyiVhfpKIDGSZEM2HlOvcqm+tG4zioyIeLoqMQ=

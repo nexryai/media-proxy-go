@@ -26,6 +26,8 @@ func isConvertible(contentType string, fetchedImage *[]byte) bool {
 		return true
 	case "image/svg+xml":
 		return true
+	case "image/x-icon":
+		return true
 	default:
 		return false
 	}
