@@ -1,13 +1,13 @@
-FROM golang:alpine as builder
+FROM alpine:edge as builder
 WORKDIR /build
 
 COPY . ./
 
 RUN sed -i 's#https\?://dl-cdn.alpinelinux.org/alpine#https://mirrors.xtom.com.hk/alpine#g' /etc/apk/repositories \
- && apk add --no-cache ca-certificates git alpine-sdk g++ build-base cmake clang libressl-dev vips vips-cpp vips-dev vips-heif \
+ && apk add --no-cache ca-certificates go git alpine-sdk g++ build-base cmake clang libressl-dev vips vips-cpp vips-dev vips-heif \
  && go build -ldflags="-s -w" -trimpath -o mediaproxy main.go
 
-FROM alpine:3.19
+FROM alpine:edge
 
 COPY --from=builder /build/mediaproxy /app/mediaproxy
 
