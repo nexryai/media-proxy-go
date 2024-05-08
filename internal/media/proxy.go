@@ -7,8 +7,8 @@ import (
 	"os"
 )
 
-// trueであればImageMagickによって処理される。そうでなければそのままプロキシされる
-func isConvertible(contentType string, fetchedImage *[]byte) bool {
+// trueであればプロキシされる。非画像メディアの扱いができないのをなんとかしたい。
+func isConvertible(contentType string) bool {
 	switch contentType {
 	case "image/avif":
 		return true
@@ -33,7 +33,7 @@ func isConvertible(contentType string, fetchedImage *[]byte) bool {
 	}
 }
 
-// アニメーション画像かどうか（convertAndResizeImage()がアニメーション画像としてレンダリングするかどうか決める時に使う）
+// アニメーション画像かどうか
 func isAnimatedFormat(contentType string, fetchedImage *[]byte) bool {
 	if contentType == "image/webp" {
 		return isAnimatedWebP(fetchedImage)
@@ -69,7 +69,7 @@ func ProxyImage(opts *ProxyRequest) (string, string, error) {
 		isAnimated = false
 	}
 
-	if isConvertible(contentType, imageBufferPtr) {
+	if isConvertible(contentType) {
 		log.Debug("Use vips")
 
 		encodeOpts := &transcodeImageOpts{
@@ -112,7 +112,12 @@ func ProxyImage(opts *ProxyRequest) (string, string, error) {
 			return "", contentType, fmt.Errorf("failed to create file")
 		}
 
-		defer file.Close()
+		defer func(file *os.File) {
+			err := file.Close()
+			if err != nil {
+				panic(err)
+			}
+		}(file)
 
 		_, err = file.Write(*convertedImageBuffer)
 		if err != nil {
