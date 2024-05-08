@@ -91,6 +91,23 @@ func main() {
 		MaxCacheFiles:    32,
 	})
 	defer vips.Shutdown()
+
+	// デフォルトのロガーだと色々見にくいのでvipsのログをvisualogに流す
+	vips.LoggingSettings(func(_ string, messageLevel vips.LogLevel, message string) {
+		vipsLog := logger.GetLogger("Vips")
+
+		// Warning以上のログを流す
+		switch messageLevel {
+		case vips.LogLevelCritical:
+			vipsLog.Fatal(message)
+		case vips.LogLevelError:
+			vipsLog.Error(message)
+		case vips.LogLevelWarning:
+			vipsLog.Warn(message)
+		default:
+			vipsLog.Error(fmt.Sprintf("[BUG] Unexpected level log from vips: %s", message))
+		}
+	}, vips.LogLevelWarning)
 	log.ProgressOk()
 
 	port := getPort(*log)
