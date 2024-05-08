@@ -25,12 +25,13 @@ func convertAndResizeImage(opts *transcodeImageOpts) (*[]byte, error) {
 
 	// バッファーから読み込み
 	if err != nil {
+		// vipsで読み込めないicoの場合はgo-icoで試してみる
 		if opts.originalFormat == "image/x-icon" || opts.originalFormat == "image/ico" {
 			log.Debug("image/x-icon detected!")
 
 			img, err := ico.Decode(bytes.NewReader(*opts.imageBufferPtr))
 			if err != nil {
-				return nil, err
+				return nil, fmt.Errorf("unsupported ico image: %v", err)
 			}
 
 			buf := new(bytes.Buffer)
@@ -50,13 +51,18 @@ func convertAndResizeImage(opts *transcodeImageOpts) (*[]byte, error) {
 
 	defer image.Close()
 
+	// nilチェック
+	if image == nil {
+		return nil, fmt.Errorf("image is nil")
+	}
+
 	// 画像サイズを取得
 	var width int
 	var height int
 
 	// apng対策
 	if isAnimatedPNG(opts.imageBufferPtr) {
-		log.Debug("Animated PNG detected!")
+		log.Debug("Animated PNG detected... ><")
 		width = image.Width()
 		height = image.Height()
 
@@ -106,7 +112,6 @@ func convertAndResizeImage(opts *transcodeImageOpts) (*[]byte, error) {
 		newHeight := height
 
 		if shouldResize {
-
 			// 縦横比率を計算
 			aspectRatio := float64(width) / float64(height)
 
@@ -215,7 +220,5 @@ func convertAndResizeImage(opts *transcodeImageOpts) (*[]byte, error) {
 		}
 
 		return &convertedData, nil
-
 	}
-
 }
