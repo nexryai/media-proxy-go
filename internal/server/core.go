@@ -124,7 +124,7 @@ func RequestHandler(w http.ResponseWriter, req *http.Request) {
 				return
 			}
 
-			_, err = client.Enqueue(task, asynq.MaxRetry(0), asynq.Timeout(15*time.Second))
+			_, err = client.Enqueue(task, asynq.MaxRetry(0), asynq.Timeout(8*time.Second))
 			if err != nil {
 				log.ErrorWithDetail("Failed to enqueue task", err)
 			}
