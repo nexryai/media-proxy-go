@@ -27,5 +27,5 @@ func isAVIF(data *[]byte) bool {
 
 func isUsesColorPalette(data *[]byte) bool {
 	// PNGの場合はPLTEチャンクが存在するかで判断
-	return len(*data) > 64 && string((*data)[60:64]) == "PLTE"
+	return len(*data) > 64 && string((*data)[57:61]) == "PLTE"
 }
