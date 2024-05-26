@@ -68,13 +68,21 @@ func convertAndResizeImage(opts *transcodeImageOpts) (*[]byte, error) {
 
 		opts.targetFormat = "webp"
 
-		// apng2webpをいつかリサイズ対応させる
-		result, err := apng2webp.Convert(opts.imageBufferPtr, width, height)
-		if err != nil {
-			return nil, err
-		}
+		// apng2webpのapngデコーダーがカラーパレットがある画像を正しく扱えない
+		// ヘッダーを読んでPLTEチャンクがあったら静止画像としてvipsで変換する
+		// https://github.com/nexryai/media-proxy-go/issues/46
+		if !isUsesColorPalette(opts.imageBufferPtr) {
+			// apng2webpをいつかリサイズ対応させる
+			result, err := apng2webp.Convert(opts.imageBufferPtr, width, height)
+			if err != nil {
+				return nil, err
+			}
 
-		return result, nil
+			return result, nil
+		} else {
+			log.Warn("Color palette detected in Animated PNG! Convert to static image... ><")
+			opts.isAnimated = false
+		}
 	}
 
 	if opts.isAnimated {
