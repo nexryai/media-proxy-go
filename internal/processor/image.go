@@ -12,7 +12,7 @@ func ProxyQueueProcessor() {
 		asynq.RedisClientOpt{Addr: os.Getenv("REDIS_ADDR")},
 		asynq.Config{
 			// Specify how many concurrent workers to use
-			Concurrency: 10,
+			Concurrency: 4,
 		},
 	)
 
