@@ -9,7 +9,7 @@ require (
 	github.com/nexryai/apng2webp v0.0.0-20240125113937-b6ca8bce3868
 	github.com/nexryai/archer v0.0.1
 	github.com/nexryai/visualog v0.0.1
-	github.com/redis/go-redis/v9 v9.5.1
+	github.com/redis/go-redis/v9 v9.5.2
 	github.com/ur65/go-ico v1.0.3
 )
 
