@@ -3,13 +3,13 @@ module git.sda1.net/media-proxy-go
 go 1.21.5
 
 require (
-	github.com/davidbyttow/govips/v2 v2.14.0
+	github.com/davidbyttow/govips/v2 v2.15.0
 	github.com/google/uuid v1.6.0
 	github.com/hibiken/asynq v0.24.1
 	github.com/nexryai/apng2webp v0.0.0-20240125113937-b6ca8bce3868
 	github.com/nexryai/archer v0.0.1
 	github.com/nexryai/visualog v0.0.1
-	github.com/redis/go-redis/v9 v9.5.1
+	github.com/redis/go-redis/v9 v9.5.3
 	github.com/ur65/go-ico v1.0.3
 )
 
