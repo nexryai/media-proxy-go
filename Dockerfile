@@ -3,9 +3,11 @@ WORKDIR /build
 
 COPY . ./
 
+ENV CC="clang flto=thin fsanitize=cfi fstack-protector-all"
+
 RUN sed -i 's#https\?://dl-cdn.alpinelinux.org/alpine#https://mirrors.xtom.com.hk/alpine#g' /etc/apk/repositories \
  && apk add --no-cache ca-certificates go git alpine-sdk g++ build-base cmake clang libressl-dev vips vips-cpp vips-dev vips-heif \
- && go build -ldflags="-s -w" -trimpath -o mediaproxy main.go
+ && go build -buildmode=pie -trimpath -o mediaproxy main.go
 
 FROM alpine:edge
 
