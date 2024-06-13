@@ -4,7 +4,7 @@ WORKDIR /build
 COPY . ./
 
 ENV CC="clang-18"
-ENV CFLAGS="-flto=thin -fsanitize=cfi -fstack-protector-all -fvisibility=hidden"
+ENV CFLAGS="-flto=thin -fstack-protector-all"
 
 RUN export CGO_CFLAGS="${CFLAGS}" \
  && sed -i 's#https\?://dl-cdn.alpinelinux.org/alpine#https://mirrors.xtom.com.hk/alpine#g' /etc/apk/repositories \
