@@ -3,7 +3,8 @@ WORKDIR /build
 
 COPY . ./
 
-ENV CC="clang-18 -flto=thin -fstack-protector-all"
+ENV CC="clang-18"
+ENV CGO_CFLAGS="-flto=thin -fsanitize=cfi -fstack-protector-all -fvisibility=hidden"
 
 RUN sed -i 's#https\?://dl-cdn.alpinelinux.org/alpine#https://mirrors.xtom.com.hk/alpine#g' /etc/apk/repositories \
  && apk add --no-cache ca-certificates go git alpine-sdk g++ build-base cmake clang18 compiler-rt libressl-dev llvm18 vips vips-cpp vips-dev vips-heif \
