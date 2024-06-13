@@ -9,7 +9,7 @@ ENV CFLAGS="-flto=thin -fstack-protector-all"
 RUN export CGO_CFLAGS="${CFLAGS}" \
  && sed -i 's#https\?://dl-cdn.alpinelinux.org/alpine#https://mirrors.xtom.com.hk/alpine#g' /etc/apk/repositories \
  && apk add --no-cache ca-certificates go git alpine-sdk g++ build-base cmake clang18 compiler-rt libressl-dev llvm18 vips vips-cpp vips-dev vips-heif \
- && go build -buildmode=pie -trimpath -o mediaproxy main.go
+ && go build -buildmode=pie -ldflags "-linkmode 'external' -extldflags '-static-pie'" -trimpath -o mediaproxy main.go
 
 FROM alpine:edge
 
